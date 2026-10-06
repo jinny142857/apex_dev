@@ -277,12 +277,13 @@ function PostCard({ stage, post, currentUser, isAdmin, onEdit, onDelete }: { sta
   const excerpt = stage === 'prework' ? post.text : post.problem || post.features || post.guide;
   return <article className={`post-card ${expanded ? 'expanded' : ''}`}>
     <div className="post-card-top"><span className="post-type">{title}</span><span className="post-initial">{(post.ownerName || '?')[0].toUpperCase()}</span></div>
-    <p className="post-excerpt">{excerpt || 'Open this post to explore the details.'}</p>
-    <div className="post-card-bottom"><span>By <strong>{post.ownerName || 'Participant'}</strong></span><button className="inline-link" onClick={() => setExpanded(!expanded)} aria-expanded={expanded}>{expanded ? 'Close' : 'Read post'} <span aria-hidden="true">↗</span></button></div>
-    {expanded && <div className="post-detail">
+    {expanded ? <div className="post-detail">
       {stage === 'prework' && <p>{post.text}</p>}
       {stage === 'prd' && <dl>{([['Problem', post.problem], ['User', post.user], ['Goal', post.goal], ['Core features', post.features]] as const).map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{value || '—'}</dd></div>)}</dl>}
       {stage === 'share' && <><p>{post.problem}</p><p>{post.features}</p><p>{post.guide}</p>{post.url && <a href={post.url} target="_blank" rel="noopener noreferrer">Open external link ↗</a>}</>}
+    </div> : <p className="post-excerpt">{excerpt || 'Open this post to explore the details.'}</p>}
+    <div className="post-card-bottom"><span>By <strong>{post.ownerName || 'Participant'}</strong></span><button className="inline-link" onClick={() => setExpanded(!expanded)} aria-expanded={expanded}>{expanded ? 'Close' : 'Read post'} <span aria-hidden="true">↗</span></button></div>
+    {expanded && <div className="post-interactions">
       {canManage && <div className="post-tools"><button className="secondary" onClick={() => onEdit(stage, post)}>Edit</button><button className="danger" onClick={() => onDelete(stage, post)}>Delete</button></div>}
       <div className="feedback"><h4>Feedback</h4>{comments.map(comment => <div className="comment" key={comment.id}><p>{comment.text}</p><div><small>{comment.authorName || 'Participant'} · {comment.createdAt?.toDate?.().toLocaleDateString?.() || 'Just now'}</small><span>{(comment.authorId === currentUser.uid || isAdmin) && <button className="inline-link" onClick={() => editFeedback(comment)}>Edit</button>}{(comment.authorId === currentUser.uid || canManage) && <button className="inline-link" onClick={() => deleteDoc(doc(clientDb(), collectionName, post.id, 'comments', comment.id))}>Delete</button>}</span></div></div>)}<div className="feedback-form"><input aria-label="Write feedback" placeholder="Write a thoughtful comment…" value={feedback} onChange={e => setFeedback(e.target.value)}/><button onClick={sendFeedback}>Post</button></div></div>
     </div>}
