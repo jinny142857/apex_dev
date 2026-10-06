@@ -1,40 +1,290 @@
 'use client';
+
 import { useEffect, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { clientAuth, clientDb } from '@/lib/firebase';
-import { createUserWithEmailAndPassword, onAuthStateChanged, signInWithEmailAndPassword, signOut, User } from 'firebase/auth';
+import { onAuthStateChanged, sendPasswordResetEmail, signInWithCustomToken, signInWithEmailAndPassword, signOut, type User } from 'firebase/auth';
 import { addDoc, collection, deleteDoc, doc, getDoc, getDocs, onSnapshot, query, serverTimestamp, setDoc, updateDoc, where } from 'firebase/firestore';
 
-type Settings = { prework:boolean; prd:boolean; share:boolean };
-const initialSettings: Settings = { prework:true, prd:false, share:false };
-const emptyPrd = { problem:'', user:'', goal:'', features:'' };
+type Stage = 'prework' | 'prd' | 'share';
+type View = Stage | 'admin';
+type Settings = Record<Stage, boolean>;
+type Prd = { problem: string; user: string; goal: string; features: string };
+type Post = { id: string; ownerId: string; ownerName?: string; text?: string; problem?: string; user?: string; goal?: string; features?: string; name?: string; url?: string; guide?: string; isPublic?: boolean; isExample?: boolean; updatedAt?: { toDate?: () => Date } };
+const defaults: Settings = { prework: true, prd: false, share: false };
+const emptyPrd: Prd = { problem: '', user: '', goal: '', features: '' };
+const emptyOutcome = { name: '', url: '', problem: '', features: '', guide: '' };
+const stages: { key: Stage; number: string; title: string; short: string; description: string }[] = [
+  { key: 'prework', number: '01', title: 'Pre-work', short: 'Pre-work', description: 'Start with a challenge from your school or teaching context.' },
+  { key: 'prd', number: '02', title: 'Problem definition & PRD', short: 'Problem & PRD', description: 'Shape your problem into a clear, useful plan.' },
+  { key: 'share', number: '03', title: 'Outcomes', short: 'Outcomes', description: 'Share what you created and learn from your peers.' },
+];
+
 export default function Home() {
- const [user,setUser]=useState<User|null>(null), [profile,setProfile]=useState<any>(null), [settings,setSettings]=useState<Settings>(initialSettings), [view,setView]=useState('prework');
- const [login,setLogin]=useState({email:'',password:''}), [signup,setSignup]=useState({nickname:'',email:'',password:''}), [message,setMessage]=useState('');
- const [prework,setPrework]=useState(''), [prd,setPrd]=useState(emptyPrd), [project,setProject]=useState<any>({name:'',url:'',problem:'',features:'',guide:'',isPublic:false}), [projects,setProjects]=useState<any[]>([]), [allProjects,setAllProjects]=useState<any[]>([]), [content,setContent]=useState(''); const [users,setUsers]=useState<any[]>([]);
- useEffect(()=>onAuthStateChanged(clientAuth(), async u=>{setUser(u); if(!u) return; const p=await getDoc(doc(clientDb(),'users',u.uid)); setProfile(p.data());}),[]);
- useEffect(()=>onSnapshot(doc(clientDb(),'settings','site'),s=>setSettings(s.exists()?s.data() as Settings:initialSettings),()=>setSettings(initialSettings)),[]);
- useEffect(()=>{fetch('/content/problem-statement-assignment.md').then(r=>r.text()).then(setContent)},[]);
- useEffect(()=>{ if(!user) return; const db=clientDb(); getDoc(doc(db,'prework',user.uid)).then(x=>setPrework(x.data()?.text||'')); getDoc(doc(db,'prds',user.uid)).then(x=>setPrd({...emptyPrd,...(x.data()||{})})); getDocs(query(collection(db,'projects'),where('ownerId','==',user.uid))).then(x=>{const first=x.docs[0];if(first)setProject({...first.data(),id:first.id})}); },[user]);
- useEffect(()=>{if(!user)return; const q=query(collection(clientDb(),'projects'),where('isPublic','==',true)); return onSnapshot(q,s=>setProjects(s.docs.map(d=>({id:d.id,...d.data()}))));},[user]);
- const isAdmin=!!profile && profile.role==='admin'; const allowed=(key:keyof Settings)=>isAdmin||settings[key];
- async function register(e:React.FormEvent){e.preventDefault();setMessage(''); const r=await fetch('/api/register',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(signup)});const d=await r.json(); if(!r.ok)return setMessage(d.error); await signInWithEmailAndPassword(clientAuth(),signup.email,signup.password); setMessage('Account created. Keep your password private.');}
- async function signIn(e:React.FormEvent){e.preventDefault(); try{await signInWithEmailAndPassword(clientAuth(),login.email,login.password)}catch{setMessage('We could not sign you in. Please check your details and try again.')}}
- async function savePrework(){if(!user)return;await setDoc(doc(clientDb(),'prework',user.uid),{text:prework,updatedAt:serverTimestamp()});setMessage('Pre-work saved.');}
- async function savePrd(){if(!user)return;await setDoc(doc(clientDb(),'prds',user.uid),{...prd,updatedAt:serverTimestamp()});setMessage('PRD saved.');}
- function downloadPrd(){const t=`# ${profile?.nickname || 'SchoolLab'} PRD\n\n## Problem\n${prd.problem}\n\n## User\n${prd.user}\n\n## Goal\n${prd.goal}\n\n## Core features\n${prd.features}\n`;const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([t],{type:'text/markdown'}));a.download='schoollab-prd.md';a.click();}
- async function saveProject(){if(!user)return;try{new URL(project.url)}catch{return setMessage('Please enter a valid MVP URL.')} const data={...project,ownerId:project.ownerId||user.uid,ownerName:project.ownerName||profile?.nickname||user.displayName,updatedAt:serverTimestamp()};if(project.id)await updateDoc(doc(clientDb(),'projects',project.id),data);else{const ref=doc(collection(clientDb(),'projects'));await setDoc(ref,data);setProject({...project,id:ref.id})}setMessage('MVP submission saved.');}
- async function removeProject(id:string){if(!confirm('Delete this MVP submission? This cannot be undone.'))return;await deleteDoc(doc(clientDb(),'projects',id));if(project.id===id)setProject({name:'',url:'',problem:'',features:'',guide:'',isPublic:false});setMessage('MVP submission deleted.');}
- async function toggle(key:keyof Settings){await setDoc(doc(clientDb(),'settings','site'),{[key]:!settings[key]},{merge:true});}
- async function loadUsers(){const token=await user?.getIdToken();const r=await fetch('/api/admin/users',{headers:{Authorization:`Bearer ${token}`}});setUsers(await r.json());const p=await getDocs(collection(clientDb(),'projects'));setAllProjects(p.docs.map(x=>({id:x.id,...x.data()})));}
- async function editUser(uid:string,nickname:string,password:string){const token=await user?.getIdToken();const r=await fetch('/api/admin/users',{method:'PATCH',headers:{'Content-Type':'application/json',Authorization:`Bearer ${token}`},body:JSON.stringify({uid,nickname,password})});const d=await r.json();setMessage(d.ok?'User account updated.':d.error);loadUsers();}
- if(!user) return <main className="shell"><section className="hero"><h1>APEX SchoolLab</h1><p>Turn a school challenge into a thoughtful MVP.</p></section><div className="grid"><form className="card" onSubmit={signIn}><h2>Sign in</h2><label>Email</label><input type="email" value={login.email} onChange={e=>setLogin({...login,email:e.target.value})}/><label>Password</label><input type="password" value={login.password} onChange={e=>setLogin({...login,password:e.target.value})}/><p><button>Sign in</button></p></form><form className="card" onSubmit={register}><h2>Create an account</h2><label>Nickname</label><input required value={signup.nickname} onChange={e=>setSignup({...signup,nickname:e.target.value})}/><label>Email</label><input required type="email" value={signup.email} onChange={e=>setSignup({...signup,email:e.target.value})}/><label>Password</label><input required minLength={8} type="password" value={signup.password} onChange={e=>setSignup({...signup,password:e.target.value})}/><p className="muted">We use your email only for account recovery and workshop communication. Do not enter student names or sensitive school information.</p><button>Create account</button></form></div>{message&&<p className="error">{message}</p>}</main>;
- return <main className="shell"><section className="hero"><div className="row spread"><div><h1>APEX SchoolLab</h1><p>Welcome, {profile?.nickname || user.displayName}.</p></div><button className="secondary" onClick={()=>signOut(clientAuth())}>Sign out</button></div><div className="steps"><span className={'step '+(prework?'done':'')}>1. Pre-work</span><span className={'step '+(prd.problem?'done':'')}>2. PRD</span><span className={'step '+(project.id?'done':'')}>3. Share your MVP</span></div></section><nav className="nav">{(['prework','prd','share','gallery'] as const).filter(x=>x==='gallery'||allowed(x as keyof Settings)).map(x=><button className={view===x?'active':'secondary'} onClick={()=>setView(x)} key={x}>{x==='share'?'Share your MVP':x==='prd'?'Write PRD':x[0].toUpperCase()+x.slice(1)}</button>)}{isAdmin&&<button className={view==='admin'?'active':'secondary'} onClick={()=>{setView('admin');loadUsers()}}>Admin</button>}</nav>{message&&<p className="notice">{message}</p>}
- {view==='prework'&&<section className="card"><div className="markdown"><ReactMarkdown>{content}</ReactMarkdown></div><label>Your problem statement</label><textarea placeholder="[WHO] struggle(s) to ..." value={prework} onChange={e=>setPrework(e.target.value)}/><p><button onClick={savePrework}>Save pre-work</button></p></section>}
- {view==='prd'&&allowed('prd')&&<section className="card"><h2>Write your PRD</h2><p className="muted">Your saved problem statement: {prework || 'No pre-work saved yet.'}</p>{([['problem','What problem are you trying to address?'],['user','Who will use the app?'],['goal','What should users be able to do with the app?'],['features','What are the one or two most important features?']] as const).map(([key,label])=><div key={key}><label>{key==='features'?'Core features':key[0].toUpperCase()+key.slice(1)}</label><textarea placeholder={label} value={prd[key]} onChange={e=>setPrd({...prd,[key]:e.target.value})}/></div>)}<p className="row"><button onClick={savePrd}>Save PRD</button><button className="secondary" onClick={downloadPrd}>Download Markdown</button></p></section>}
- {view==='share'&&allowed('share')&&<section className="card"><h2>Share your MVP</h2>{([['name','App or project name'],['url','MVP link'],['problem','Problem addressed'],['features','Core features'],['guide','Optional introduction or instructions']] as const).map(([key,label])=><div key={key}><label>{label}</label>{key==='url'||key==='name'?<input value={project[key]||''} onChange={e=>setProject({...project,[key]:e.target.value})}/>:<textarea value={project[key]||''} onChange={e=>setProject({...project,[key]:e.target.value})}/>}</div>)}<label><input style={{width:'auto'}} type="checkbox" checked={project.isPublic} onChange={e=>setProject({...project,isPublic:e.target.checked})}/> Show this MVP to other participants</label><p className="row"><button onClick={saveProject}>Save submission</button>{project.id&&<button className="danger" onClick={()=>removeProject(project.id)}>Delete submission</button>}{project.url&&<a href={project.url} target="_blank">Preview external link ↗</a>}</p></section>}
- {view==='gallery'&&<section className="card"><h2>Shared MVPs</h2>{projects.length?projects.map(p=><ProjectCard project={p} user={user} isAdmin={isAdmin} key={p.id}/>):<p className="muted">No public MVPs yet.</p>}</section>}
- {view==='admin'&&isAdmin&&<section className="card"><h2>Administrator controls</h2><p>Administrators always see every workflow screen, even when it is hidden for participants.</p><div className="grid">{(['prework','prd','share'] as const).map(key=><div className="card" key={key}><strong>{key==='share'?'Share your MVP':key==='prd'?'PRD':'Pre-work'}</strong><p>{settings[key]?'Visible to participants':'Hidden from participants'}</p><button className="secondary" onClick={()=>toggle(key)}>{settings[key]?'Hide menu':'Open menu'}</button></div>)}</div><h3>Participant accounts</h3><table className="admin-table"><thead><tr><th>Nickname</th><th>Email</th><th>New password</th><th></th></tr></thead><tbody>{Array.isArray(users)&&users.map(u=><UserRow key={u.uid} user={u} onSave={editUser}/>)}</tbody></table><h3>All MVP submissions</h3>{allProjects.map(p=><article className="project" key={p.id}><strong>{p.name}</strong><span className="muted"> · {p.ownerName} · {p.isPublic?'Public':'Private'}</span><p className="row"><button className="secondary" onClick={()=>{setProject(p);setView('share')}}>Edit submission</button><button className="danger" onClick={()=>removeProject(p.id)}>Delete submission</button></p></article>)}</section>}</main>;
+  const [user, setUser] = useState<User | null>(null);
+  const [profile, setProfile] = useState<{ nickname?: string; role?: string } | null>(null);
+  const [settings, setSettings] = useState<Settings>(defaults);
+  const [view, setView] = useState<View>('prework');
+  const [pageMode, setPageMode] = useState<'board' | 'editor'>('board');
+  const [login, setLogin] = useState({ identifier: '', password: '' });
+  const [signup, setSignup] = useState({ nickname: '', email: '', password: '' });
+  const [authMode, setAuthMode] = useState<'signin' | 'signup' | 'reset'>('signin');
+  const [showPassword, setShowPassword] = useState(false);
+  const [resetEmail, setResetEmail] = useState('');
+  const [message, setMessage] = useState('');
+  const [prework, setPrework] = useState('');
+  const [prd, setPrd] = useState<Prd>(emptyPrd);
+  const [outcome, setOutcome] = useState({ ...emptyOutcome, id: '' });
+  const [content, setContent] = useState('');
+  const [posts, setPosts] = useState<Record<Stage, Post[]>>({ prework: [], prd: [], share: [] });
+  const [users, setUsers] = useState<any[]>([]);
+  const [adminPosts, setAdminPosts] = useState<Record<Stage, Post[]>>({ prework: [], prd: [], share: [] });
+  const [editing, setEditing] = useState<{ stage: Stage; post: Post } | null>(null);
+  const [busy, setBusy] = useState(false);
+
+  useEffect(() => onAuthStateChanged(clientAuth(), async current => {
+    setUser(current);
+    setProfile(null);
+    if (current) {
+      const snapshot = await getDoc(doc(clientDb(), 'users', current.uid));
+      setProfile(snapshot.data() || null);
+    }
+  }), []);
+  useEffect(() => {
+    if (!user) return;
+    return onSnapshot(doc(clientDb(), 'settings', 'site'), snapshot => setSettings({ ...defaults, ...(snapshot.data() || {}) }));
+  }, [user]);
+  useEffect(() => { fetch('/content/problem-statement-assignment.md').then(r => r.text()).then(setContent).catch(() => setContent('')); }, []);
+  useEffect(() => {
+    if (!user) return;
+    const db = clientDb();
+    getDoc(doc(db, 'prework', user.uid)).then(s => setPrework(s.data()?.text || ''));
+    getDoc(doc(db, 'prds', user.uid)).then(s => setPrd({ ...emptyPrd, ...(s.data() || {}) }));
+    getDocs(query(collection(db, 'projects'), where('ownerId', '==', user.uid))).then(s => {
+      if (s.docs[0]) setOutcome({ ...emptyOutcome, ...s.docs[0].data(), id: s.docs[0].id });
+    });
+  }, [user]);
+  useEffect(() => {
+    if (!user) return;
+    const unsubscribe = stages.map(({ key }) => onSnapshot(query(collection(clientDb(), key === 'prd' ? 'prds' : key === 'share' ? 'projects' : 'prework'), where('isPublic', '==', true)), snapshot => {
+      const entries = snapshot.docs.map(d => ({ id: d.id, ...d.data() } as Post)).sort((a, b) => Number(!!b.isExample) - Number(!!a.isExample) || (b.updatedAt?.toDate?.().getTime() || 0) - (a.updatedAt?.toDate?.().getTime() || 0));
+      setPosts(previous => ({ ...previous, [key]: entries }));
+    }, () => setMessage('Unable to load shared posts. Check your Firestore rules.')));
+    return () => unsubscribe.forEach(stop => stop());
+  }, [user]);
+
+  const isAdmin = profile?.role === 'admin';
+  const name = profile?.nickname || user?.displayName || 'Participant';
+  const allowed = (stage: Stage) => isAdmin || settings[stage];
+  const active = stages.find(s => s.key === view);
+  const completed: Record<Stage, boolean> = { prework: !!prework.trim(), prd: !!prd.problem.trim(), share: !!outcome.id };
+
+  async function register(event: React.FormEvent) {
+    event.preventDefault(); setMessage(''); setBusy(true);
+    try {
+      const response = await fetch('/api/register', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(signup) });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || 'Could not create account.');
+      await signInWithEmailAndPassword(clientAuth(), signup.email, signup.password);
+      setMessage('Account created. Keep your password private.');
+    } catch (error) { setMessage(error instanceof Error ? error.message : 'Could not create account.'); }
+    finally { setBusy(false); }
+  }
+  async function signIn(event: React.FormEvent) {
+    event.preventDefault(); setMessage(''); setBusy(true);
+    try {
+      const response = await fetch('/api/auth/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ nickname: login.identifier, password: login.password }) });
+      const result = await response.json();
+      if (!response.ok) throw new Error();
+      await signInWithCustomToken(clientAuth(), result.token);
+    } catch { setMessage('We could not sign you in. Please check your nickname and password.'); }
+    finally { setBusy(false); }
+  }
+  async function resetPassword(event: React.FormEvent) {
+    event.preventDefault(); setBusy(true); setMessage('');
+    try {
+      await sendPasswordResetEmail(clientAuth(), resetEmail.trim());
+      setMessage('If this email is registered, you will receive a password reset link.');
+      setAuthMode('signin');
+    } catch {
+      setMessage('We could not send the reset email. Please check the address and try again.');
+    } finally { setBusy(false); }
+  }
+  async function savePrework() {
+    if (!user || !prework.trim()) return setMessage('Write your problem statement before publishing.');
+    setBusy(true);
+    try {
+      const target = editing?.stage === 'prework' ? editing.post : null;
+      await setDoc(doc(clientDb(), 'prework', target?.id || user.uid), { ownerId: target?.ownerId || user.uid, ownerName: target?.ownerName || name, text: prework.trim(), isPublic: true, updatedAt: serverTimestamp() }, { merge: true });
+      setEditing(null);
+      if (target && target.ownerId !== user.uid) setPrework((await getDoc(doc(clientDb(), 'prework', user.uid))).data()?.text || '');
+      setMessage('Your pre-work is published to the group.');
+      setPageMode('board');
+    } catch { setMessage('Could not publish pre-work. Please try again.'); }
+    finally { setBusy(false); }
+  }
+  async function savePrd() {
+    if (!user || !Object.values(prd).some(v => v.trim())) return setMessage('Add something to your plan before publishing.');
+    setBusy(true);
+    try {
+      const target = editing?.stage === 'prd' ? editing.post : null;
+      await setDoc(doc(clientDb(), 'prds', target?.id || user.uid), { ...prd, ownerId: target?.ownerId || user.uid, ownerName: target?.ownerName || name, isPublic: true, updatedAt: serverTimestamp() }, { merge: true });
+      setEditing(null);
+      if (target && target.ownerId !== user.uid) setPrd({ ...emptyPrd, ...((await getDoc(doc(clientDb(), 'prds', user.uid))).data() || {}) });
+      setMessage('Your problem definition and PRD are published to the group.');
+      setPageMode('board');
+    } catch { setMessage('Could not publish your plan. Please try again.'); }
+    finally { setBusy(false); }
+  }
+  function downloadPrd() {
+    const markdown = `# ${name}'s PRD\n\n## Problem\n${prd.problem}\n\n## User\n${prd.user}\n\n## Goal\n${prd.goal}\n\n## Core features\n${prd.features}\n`;
+    const url = URL.createObjectURL(new Blob([markdown], { type: 'text/markdown' }));
+    const anchor = document.createElement('a'); anchor.href = url; anchor.download = 'schoollab-prd.md'; anchor.click(); URL.revokeObjectURL(url);
+  }
+  async function saveOutcome() {
+    if (!user || !outcome.name.trim()) return setMessage('Add a title before publishing.');
+    if (outcome.url) { try { const parsed = new URL(outcome.url); if (!['http:', 'https:'].includes(parsed.protocol)) throw new Error(); } catch { return setMessage('Enter a valid http or https link.'); } }
+    setBusy(true);
+    try {
+      const { id, ...fields } = outcome;
+      const target = editing?.stage === 'share' ? editing.post : null;
+      const data = { ...fields, ownerId: target?.ownerId || user.uid, ownerName: target?.ownerName || name, isPublic: true, updatedAt: serverTimestamp() };
+      if (id) await setDoc(doc(clientDb(), 'projects', id), data, { merge: true });
+      else { const ref = doc(collection(clientDb(), 'projects')); await setDoc(ref, data); setOutcome(previous => ({ ...previous, id: ref.id })); }
+      setEditing(null);
+      if (target && target.ownerId !== user.uid) {
+        const mine = await getDocs(query(collection(clientDb(), 'projects'), where('ownerId', '==', user.uid)));
+        setOutcome(mine.docs[0] ? { ...emptyOutcome, ...mine.docs[0].data(), id: mine.docs[0].id } : { ...emptyOutcome, id: '' });
+      }
+      setMessage('Your outcome is published to the group.');
+      setPageMode('board');
+    } catch { setMessage('Could not publish your outcome. Please try again.'); }
+    finally { setBusy(false); }
+  }
+  async function removePost(stage: Stage, post: Post) {
+    if (!window.confirm('Delete this post? This cannot be undone.')) return;
+    const collectionName = stage === 'prd' ? 'prds' : stage === 'share' ? 'projects' : 'prework';
+    await deleteDoc(doc(clientDb(), collectionName, post.id));
+    if (post.ownerId === user?.uid) {
+      if (stage === 'prework') setPrework('');
+      if (stage === 'prd') setPrd(emptyPrd);
+      if (stage === 'share') setOutcome({ ...emptyOutcome, id: '' });
+    }
+    setMessage('Post deleted.');
+    if (isAdmin) loadAdmin();
+  }
+  async function toggle(stage: Stage) { await setDoc(doc(clientDb(), 'settings', 'site'), { [stage]: !settings[stage] }, { merge: true }); }
+  async function loadAdmin() {
+    if (!user) return;
+    const token = await user.getIdToken();
+    const response = await fetch('/api/admin/users', { headers: { Authorization: `Bearer ${token}` } });
+    if (response.ok) setUsers(await response.json());
+    const [pre, plans, outcomes] = await Promise.all([
+      getDocs(collection(clientDb(), 'prework')),
+      getDocs(collection(clientDb(), 'prds')),
+      getDocs(collection(clientDb(), 'projects')),
+    ]);
+    setAdminPosts({ prework: pre.docs.map(d => ({ id: d.id, ...d.data() } as Post)), prd: plans.docs.map(d => ({ id: d.id, ...d.data() } as Post)), share: outcomes.docs.map(d => ({ id: d.id, ...d.data() } as Post)) });
+  }
+  async function editUser(uid: string, nickname: string, password: string) {
+    if (!user) return;
+    const token = await user.getIdToken();
+    const response = await fetch('/api/admin/users', { method: 'PATCH', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }, body: JSON.stringify({ uid, nickname, password }) });
+    const result = await response.json();
+    setMessage(result.ok ? 'User account updated.' : result.error);
+    loadAdmin();
+  }
+  function editPost(stage: Stage, post: Post) {
+    setEditing({ stage, post });
+    if (stage === 'prework') setPrework(post.text || '');
+    setPageMode('editor');
+    if (stage === 'prd') setPrd({ problem: post.problem || '', user: post.user || '', goal: post.goal || '', features: post.features || '' });
+    if (stage === 'share') setOutcome({ ...emptyOutcome, ...post, id: post.id });
+    setView(stage);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+  async function cancelEdit() {
+    if (!user) return;
+    const stage = editing?.stage;
+    setEditing(null);
+    setPageMode('board');
+    if (stage === 'prework') setPrework((await getDoc(doc(clientDb(), 'prework', user.uid))).data()?.text || '');
+    if (stage === 'prd') setPrd({ ...emptyPrd, ...((await getDoc(doc(clientDb(), 'prds', user.uid))).data() || {}) });
+    if (stage === 'share') {
+      const mine = await getDocs(query(collection(clientDb(), 'projects'), where('ownerId', '==', user.uid)));
+      setOutcome(mine.docs[0] ? { ...emptyOutcome, ...mine.docs[0].data(), id: mine.docs[0].id } : { ...emptyOutcome, id: '' });
+    }
+  }
+
+  if (!user) return <main className="auth-shell">
+    <header className="auth-header"><BrandMark/><strong>APEX DEV</strong></header>
+    <section className="auth-main"><div className="auth-heading"><p className="eyebrow">YOUR WORKSHOP SPACE</p><h1>{authMode === 'signin' ? 'Welcome back' : authMode === 'signup' ? 'Create your account' : 'Reset your password'}</h1><p>{authMode === 'signin' ? 'Sign in to continue your work and explore ideas from the group.' : authMode === 'signup' ? 'Start with a nickname. Your work will be shared when you publish it.' : 'Enter the email you used when creating your account.'}</p></div>
+      <div className="auth-card">
+        {authMode === 'signin' && <form onSubmit={signIn}><label htmlFor="login-nickname">Nickname</label><input id="login-nickname" autoComplete="username" required placeholder="Your nickname" value={login.identifier} onChange={e => setLogin({ ...login, identifier: e.target.value })}/><label htmlFor="login-password">Password</label><div className="password-field"><input id="login-password" autoComplete="current-password" required type={showPassword ? 'text' : 'password'} placeholder="Your password" value={login.password} onChange={e => setLogin({ ...login, password: e.target.value })}/><button type="button" className="show-password" onClick={() => setShowPassword(!showPassword)} aria-label={showPassword ? 'Hide password' : 'Show password'}>{showPassword ? 'Hide' : 'Show'}</button></div><button className="auth-submit" disabled={busy}>Sign in</button><div className="auth-links"><span>New to APEX DEV? <button type="button" className="inline-link" onClick={() => { setAuthMode('signup'); setMessage(''); }}>Create an account</button></span><button type="button" className="inline-link" onClick={() => { setAuthMode('reset'); setMessage(''); }}>Forgot password?</button></div></form>}
+        {authMode === 'signup' && <form onSubmit={register}><label htmlFor="signup-nickname">Nickname</label><input id="signup-nickname" autoComplete="username" required placeholder="Your nickname" value={signup.nickname} onChange={e => setSignup({ ...signup, nickname: e.target.value })}/><label htmlFor="signup-email">Email</label><input id="signup-email" autoComplete="email" required type="email" placeholder="name@gmail.com" value={signup.email} onChange={e => setSignup({ ...signup, email: e.target.value })}/><label htmlFor="signup-password">Password</label><div className="password-field"><input id="signup-password" autoComplete="new-password" required minLength={8} type={showPassword ? 'text' : 'password'} placeholder="At least 8 characters" value={signup.password} onChange={e => setSignup({ ...signup, password: e.target.value })}/><button type="button" className="show-password" onClick={() => setShowPassword(!showPassword)} aria-label={showPassword ? 'Hide password' : 'Show password'}>{showPassword ? 'Hide' : 'Show'}</button></div><p className="auth-help">We use your email for account recovery and workshop communication. Please do not enter student names or sensitive school information.</p><button className="auth-submit" disabled={busy}>Create account</button><div className="auth-links"><span>Already have an account? <button type="button" className="inline-link" onClick={() => { setAuthMode('signin'); setMessage(''); }}>Sign in</button></span></div></form>}
+        {authMode === 'reset' && <form onSubmit={resetPassword}><label htmlFor="reset-email">Email</label><input id="reset-email" autoComplete="email" required type="email" placeholder="name@gmail.com" value={resetEmail} onChange={e => setResetEmail(e.target.value)}/><button className="auth-submit" disabled={busy}>Send reset link</button><div className="auth-links"><button type="button" className="inline-link" onClick={() => { setAuthMode('signin'); setMessage(''); }}>Back to sign in</button></div></form>}
+      </div>{message && <p role="status" className="auth-message">{message}</p>}
+    </section>
+  </main>;
+
+  return <main className="app-shell">
+    <header className="topbar"><div className="topbar-inner"><div className="brand"><BrandMark/><strong>APEX DEV</strong></div><div className="account"><span className="avatar">{name.slice(0, 1).toUpperCase()}</span><span className="account-name">{name}</span><button className="text-button" onClick={() => signOut(clientAuth())}>Sign out</button></div></div></header>
+    <div className="workspace">
+      <nav className="stage-nav" aria-label="Workshop stages">{stages.filter(s => allowed(s.key)).map(s => <button key={s.key} className={`stage-tab ${view === s.key ? 'current' : ''}`} onClick={() => { if (editing) void cancelEdit(); setView(s.key); setPageMode('board'); }}><span className="stage-number">{s.number}</span><span>{s.short}</span>{completed[s.key] && <span className="complete-mark" aria-label="Completed">✓</span>}</button>)}{isAdmin && <button className={`stage-tab admin-tab ${view === 'admin' ? 'current' : ''}`} onClick={() => { if (editing) void cancelEdit(); setView('admin'); loadAdmin(); }}>Admin</button>}</nav>
+      {message && <div role="status" className="notice">{message}<button className="notice-close" aria-label="Dismiss message" onClick={() => setMessage('')}>×</button></div>}
+      {active && allowed(active.key) && <><section className="section-heading stage-heading"><div><p className="eyebrow">STEP {active.number} / 03</p><h2>{pageMode === 'editor' ? (view === 'prework' ? 'Write your Pre-work post' : view === 'prd' ? 'Write your Problem & PRD post' : 'Share your outcome') : active.title}</h2><p>{pageMode === 'editor' && view === 'prework' ? 'Use the guide while you shape your problem statement.' : active.description}</p></div><button className={pageMode === 'editor' ? 'secondary' : ''} onClick={() => { if (pageMode === 'editor') { if (editing) void cancelEdit(); else setPageMode('board'); } else setPageMode('editor'); }}>{pageMode === 'editor' ? '← Back to posts' : '+ New post'}</button></section>
+        {editing?.stage === view && <div className="editing-banner">Editing {editing.post.ownerName || 'participant'}’s post <button className="inline-link" onClick={cancelEdit}>Cancel editing</button></div>}
+        {view === 'prework' && pageMode === 'editor' && <section className="editor-panel prework-editor"><div className="panel-heading"><div><p className="eyebrow">YOUR CONTRIBUTION</p><h3>Define a school challenge</h3></div><span className="privacy-pill">Shared with the group</span></div><div className="prework-columns"><aside className="assignment-guide"><div className="column-label">ASSIGNMENT GUIDE</div><div className="markdown"><ReactMarkdown>{content}</ReactMarkdown></div></aside><div className="statement-column"><div className="column-label">YOUR RESPONSE</div><label htmlFor="prework">Problem statement</label><p className="field-help">Write one clear statement using the template on the left.</p><textarea id="prework" className="large-editor" placeholder="[WHO] struggle(s) to [SPECIFIC TASK OR PAIN] when [SITUATION / CONTEXT] because [ROOT CAUSE]." value={prework} onChange={e => setPrework(e.target.value)}/><p className="field-help">Your post will be visible to other workshop participants.</p></div></div><div className="editor-footer"><p>You can update your statement later.</p><button disabled={busy} onClick={savePrework}>{posts.prework.some(p => p.id === user.uid) || editing?.stage === 'prework' ? 'Update post' : 'Publish post'} <span aria-hidden="true">↗</span></button></div></section>}
+        {view === 'prd' && pageMode === 'editor' && <section className="editor-panel"><div className="panel-heading"><div><p className="eyebrow">YOUR CONTRIBUTION</p><h3>Define the problem and plan</h3></div><span className="privacy-pill">Shared with the group</span></div><div className="context-note"><strong>From your Pre-work</strong><p>{prework || 'Your saved problem statement will appear here.'}</p></div><div className="form-grid">{([['problem', 'Problem', 'What problem are you trying to address?'], ['user', 'User', 'Who will use the app?'], ['goal', 'Goal', 'What should users be able to do with the app?'], ['features', 'Core features', 'What are the one or two most important features?']] as const).map(([key, title, hint]) => <div className="field" key={key}><label htmlFor={`prd-${key}`}>{title}</label><textarea id={`prd-${key}`} placeholder={hint} value={prd[key]} onChange={e => setPrd({ ...prd, [key]: e.target.value })}/></div>)}</div><div className="editor-footer"><p>Your plan will appear in the shared Problem & PRD board.</p><div className="actions"><button className="secondary" onClick={downloadPrd}>Download .md</button><button disabled={busy} onClick={savePrd}>{posts.prd.some(p => p.id === user.uid) ? 'Update post' : 'Publish post'} <span aria-hidden="true">↗</span></button></div></div></section>}
+        {view === 'share' && pageMode === 'editor' && <section className="editor-panel"><div className="panel-heading"><div><p className="eyebrow">YOUR CONTRIBUTION</p><h3>Share your outcome</h3></div><span className="privacy-pill">Shared with the group</span></div><div className="form-grid"><div className="field"><label htmlFor="outcome-name">Title</label><input id="outcome-name" placeholder="What did you create?" value={outcome.name} onChange={e => setOutcome({ ...outcome, name: e.target.value })}/></div><div className="field"><label htmlFor="outcome-url">Link <span className="optional">optional</span></label><input id="outcome-url" type="url" placeholder="https://..." value={outcome.url} onChange={e => setOutcome({ ...outcome, url: e.target.value })}/></div><div className="field"><label htmlFor="outcome-problem">Problem addressed</label><textarea id="outcome-problem" placeholder="What challenge does it respond to?" value={outcome.problem} onChange={e => setOutcome({ ...outcome, problem: e.target.value })}/></div><div className="field"><label htmlFor="outcome-features">What it does</label><textarea id="outcome-features" placeholder="Describe the main features or result." value={outcome.features} onChange={e => setOutcome({ ...outcome, features: e.target.value })}/></div></div><label htmlFor="outcome-guide">Introduction or instructions <span className="optional">optional</span></label><textarea id="outcome-guide" placeholder="Anything your peers should know before exploring?" value={outcome.guide} onChange={e => setOutcome({ ...outcome, guide: e.target.value })}/><div className="editor-footer"><p>Projects, resources, documents, and prototypes are all welcome.</p><button disabled={busy} onClick={saveOutcome}>{outcome.id ? 'Update outcome' : 'Publish outcome'} <span aria-hidden="true">↗</span></button></div></section>}
+        {pageMode === 'board' && <section className="board board-primary"><div className="board-heading"><div><h3>Shared work <span>{posts[active.key].length}</span></h3><p>Ideas and progress from the group.</p></div></div><div className="post-grid">{posts[active.key].length ? posts[active.key].map(post => <PostCard key={post.id} stage={active.key} post={post} currentUser={user} isAdmin={isAdmin} onEdit={editPost} onDelete={removePost}/>) : <div className="empty-state"><span aria-hidden="true">✳</span><h4>No posts yet</h4><p>Be the first to share your work in this step.</p></div>}</div></section>}
+      </>}
+      {view === 'admin' && isAdmin && <section className="admin-area"><div className="section-heading"><p className="eyebrow">WORKSHOP MANAGEMENT</p><h2>Admin controls</h2><p>Manage access, accounts, and contributions across all stages.</p></div><div className="admin-section"><h3>Stage visibility</h3><p className="muted">You can always open every stage. Participants see only the stages you enable.</p><div className="visibility-grid">{stages.map(stage => <div className="visibility-card" key={stage.key}><span className="stage-number">{stage.number}</span><strong>{stage.title}</strong><span className={`status-pill ${settings[stage.key] ? 'open' : ''}`}>{settings[stage.key] ? 'Open' : 'Hidden'}</span><button className="secondary" onClick={() => toggle(stage.key)}>{settings[stage.key] ? 'Hide from participants' : 'Open to participants'}</button></div>)}</div></div><div className="admin-section"><h3>Participant accounts</h3><div className="table-wrap"><table className="admin-table"><thead><tr><th>Nickname</th><th>Email</th><th>New password</th><th></th></tr></thead><tbody>{users.map(account => <UserRow key={account.uid} account={account} onSave={editUser}/>)}</tbody></table></div></div><div className="admin-section"><h3>All contributions</h3>{stages.map(stage => <div className="admin-post-group" key={stage.key}><h4>{stage.title} <span>{adminPosts[stage.key].length}</span></h4>{adminPosts[stage.key].map(post => <div className="admin-post" key={post.id}><div><strong>{post.name || post.text?.slice(0, 75) || post.problem?.slice(0, 75) || 'Untitled'}</strong><small>{post.ownerName || post.ownerId} · {post.isPublic ? 'Shared' : 'Private legacy post'}</small></div><div className="actions"><button className="secondary" onClick={() => editPost(stage.key, post)}>Edit</button><button className="danger" onClick={() => removePost(stage.key, post)}>Delete</button></div></div>)}</div>)}</div></section>}
+    </div>
+  </main>;
 }
-function UserRow({user,onSave}:{user:any,onSave:(id:string,n:string,p:string)=>void}){const[n,setN]=useState(user.nickname||''),[p,setP]=useState('');return <tr><td><input value={n} onChange={e=>setN(e.target.value)}/></td><td>{user.email}</td><td><input type="password" placeholder="Leave blank to keep" value={p} onChange={e=>setP(e.target.value)}/></td><td><button onClick={()=>onSave(user.uid,n,p)}>Update</button></td></tr>}
-function ProjectCard({project,user,isAdmin}:{project:any,user:User,isAdmin:boolean}){const[comments,setComments]=useState<any[]>([]),[text,setText]=useState('');useEffect(()=>onSnapshot(collection(clientDb(),'projects',project.id,'comments'),s=>setComments(s.docs.map(d=>({id:d.id,...d.data()})))),[project.id]);async function post(){if(!text.trim())return;await addDoc(collection(clientDb(),'projects',project.id,'comments'),{text:text.trim(),authorId:user.uid,authorName:user.displayName||'Participant',createdAt:serverTimestamp()});setText('')}async function edit(c:any){const text=prompt('Edit your feedback',c.text);if(text?.trim())await updateDoc(doc(clientDb(),'projects',project.id,'comments',c.id),{text:text.trim(),updatedAt:serverTimestamp()})}return <article className="project"><h3>{project.name}</h3><p>{project.problem}</p><p className="muted">By {project.ownerName}</p><p><a href={project.url} target="_blank">Open external MVP ↗</a></p><div className="card"><strong>Feedback</strong>{comments.map(c=><div className="project" key={c.id}><span>{c.text}</span><p className="muted">{c.authorName} {c.createdAt?.toDate?.().toLocaleString?.()||'just now'} {(c.authorId===user.uid||isAdmin)&&<><button className="secondary" onClick={()=>edit(c)}>Edit</button> <button className="danger" onClick={()=>deleteDoc(doc(clientDb(),'projects',project.id,'comments',c.id))}>Delete</button></>}</p></div>)}<div className="row"><input aria-label="Feedback" placeholder="Leave constructive feedback" value={text} onChange={e=>setText(e.target.value)}/><button onClick={post}>Post</button></div></div></article>}
+
+function UserRow({ account, onSave }: { account: any; onSave: (uid: string, nickname: string, password: string) => void }) {
+  const [nickname, setNickname] = useState(account.nickname || '');
+  const [password, setPassword] = useState('');
+  return <tr><td><input aria-label={`Nickname for ${account.email}`} value={nickname} onChange={e => setNickname(e.target.value)}/></td><td>{account.email}</td><td><input aria-label={`New password for ${account.email}`} type="password" placeholder="Leave blank to keep" value={password} onChange={e => setPassword(e.target.value)}/></td><td><button className="secondary" onClick={() => { onSave(account.uid, nickname, password); setPassword(''); }}>Save</button></td></tr>;
+}
+
+function BrandMark() {
+  return <span className="brand-mark" aria-hidden="true"><svg viewBox="0 0 32 32" fill="none"><path d="m12 9-7 7 7 7m8-14 7 7-7 7m-2-18-4 22" stroke="currentColor" strokeWidth="2.7" strokeLinecap="round" strokeLinejoin="round"/></svg></span>;
+}
+
+function PostCard({ stage, post, currentUser, isAdmin, onEdit, onDelete }: { stage: Stage; post: Post; currentUser: User; isAdmin: boolean; onEdit: (stage: Stage, post: Post) => void; onDelete: (stage: Stage, post: Post) => void }) {
+  const [expanded, setExpanded] = useState(false);
+  const [comments, setComments] = useState<any[]>([]);
+  const [feedback, setFeedback] = useState('');
+  const canManage = post.ownerId === currentUser.uid || isAdmin;
+  const collectionName = stage === 'prd' ? 'prds' : stage === 'share' ? 'projects' : 'prework';
+  useEffect(() => {
+    if (!expanded) return;
+    return onSnapshot(collection(clientDb(), collectionName, post.id, 'comments'), snapshot => setComments(snapshot.docs.map(d => ({ id: d.id, ...d.data() }))));
+  }, [expanded, collectionName, post.id]);
+  async function sendFeedback() {
+    if (!feedback.trim()) return;
+    await addDoc(collection(clientDb(), collectionName, post.id, 'comments'), { text: feedback.trim(), authorId: currentUser.uid, authorName: currentUser.displayName || 'Participant', createdAt: serverTimestamp() });
+    setFeedback('');
+  }
+  async function editFeedback(comment: any) {
+    const text = window.prompt('Edit your feedback', comment.text);
+    if (text?.trim()) await updateDoc(doc(clientDb(), collectionName, post.id, 'comments', comment.id), { text: text.trim(), updatedAt: serverTimestamp() });
+  }
+  const title = post.isExample ? 'Example' : stage === 'prework' ? 'Problem statement' : stage === 'prd' ? 'Problem & PRD' : post.name || 'Outcome';
+  const excerpt = stage === 'prework' ? post.text : post.problem || post.features || post.guide;
+  return <article className={`post-card ${expanded ? 'expanded' : ''}`}>
+    <div className="post-card-top"><span className="post-type">{title}</span><span className="post-initial">{(post.ownerName || '?')[0].toUpperCase()}</span></div>
+    <p className="post-excerpt">{excerpt || 'Open this post to explore the details.'}</p>
+    <div className="post-card-bottom"><span>By <strong>{post.ownerName || 'Participant'}</strong></span><button className="inline-link" onClick={() => setExpanded(!expanded)} aria-expanded={expanded}>{expanded ? 'Close' : 'Read post'} <span aria-hidden="true">↗</span></button></div>
+    {expanded && <div className="post-detail">
+      {stage === 'prework' && <p>{post.text}</p>}
+      {stage === 'prd' && <dl>{([['Problem', post.problem], ['User', post.user], ['Goal', post.goal], ['Core features', post.features]] as const).map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{value || '—'}</dd></div>)}</dl>}
+      {stage === 'share' && <><p>{post.problem}</p><p>{post.features}</p><p>{post.guide}</p>{post.url && <a href={post.url} target="_blank" rel="noopener noreferrer">Open external link ↗</a>}</>}
+      {canManage && <div className="post-tools"><button className="secondary" onClick={() => onEdit(stage, post)}>Edit</button><button className="danger" onClick={() => onDelete(stage, post)}>Delete</button></div>}
+      <div className="feedback"><h4>Feedback</h4>{comments.map(comment => <div className="comment" key={comment.id}><p>{comment.text}</p><div><small>{comment.authorName || 'Participant'} · {comment.createdAt?.toDate?.().toLocaleDateString?.() || 'Just now'}</small><span>{(comment.authorId === currentUser.uid || isAdmin) && <button className="inline-link" onClick={() => editFeedback(comment)}>Edit</button>}{(comment.authorId === currentUser.uid || canManage) && <button className="inline-link" onClick={() => deleteDoc(doc(clientDb(), collectionName, post.id, 'comments', comment.id))}>Delete</button>}</span></div></div>)}<div className="feedback-form"><input aria-label="Write feedback" placeholder="Write a thoughtful comment…" value={feedback} onChange={e => setFeedback(e.target.value)}/><button onClick={sendFeedback}>Post</button></div></div>
+    </div>}
+  </article>;
+}
