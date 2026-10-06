@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { clientAuth, clientDb } from '@/lib/firebase';
 import { onAuthStateChanged, sendPasswordResetEmail, signInWithCustomToken, signInWithEmailAndPassword, signOut, type User } from 'firebase/auth';
@@ -22,7 +22,7 @@ const stages: { key: Stage; number: string; title: string; short: string; descri
 
 export default function Home() {
   const [user, setUser] = useState<User | null>(null);
-  const [profile, setProfile] = useState<{ nickname?: string; role?: string } | null>(null);
+  const [profile, setProfile] = useState<{ nickname?: string; role?: string; preworkGuideSeenAt?: string } | null>(null);
   const [settings, setSettings] = useState<Settings>(defaults);
   const [view, setView] = useState<View>('prework');
   const [pageMode, setPageMode] = useState<'board' | 'editor'>('board');
@@ -38,6 +38,8 @@ export default function Home() {
   const [content, setContent] = useState('');
   const [posts, setPosts] = useState<Record<Stage, Post[]>>({ prework: [], prd: [], share: [] });
   const [openPost, setOpenPost] = useState<{ stage: Stage; id: string } | null>(null);
+  const [guideOpen, setGuideOpen] = useState(false);
+  const [guidePromptedUserId, setGuidePromptedUserId] = useState<string | null>(null);
   const [users, setUsers] = useState<any[]>([]);
   const [adminPosts, setAdminPosts] = useState<Record<Stage, Post[]>>({ prework: [], prd: [], share: [] });
   const [editing, setEditing] = useState<{ stage: Stage; post: Post } | null>(null);
@@ -56,6 +58,11 @@ export default function Home() {
     return onSnapshot(doc(clientDb(), 'settings', 'site'), snapshot => setSettings({ ...defaults, ...(snapshot.data() || {}) }));
   }, [user]);
   useEffect(() => { fetch('/content/problem-statement-assignment.md').then(r => r.text()).then(setContent).catch(() => setContent('')); }, []);
+  useEffect(() => {
+    if (!user || !profile || view !== 'prework' || pageMode !== 'board' || guidePromptedUserId === user.uid) return;
+    setGuidePromptedUserId(user.uid);
+    if (!profile.preworkGuideSeenAt) setGuideOpen(true);
+  }, [user, profile, view, pageMode, guidePromptedUserId]);
   useEffect(() => {
     if (!user) return;
     const db = clientDb();
@@ -82,6 +89,20 @@ export default function Home() {
   const openPostIndex = active && openPost?.stage === active.key ? stagePosts.findIndex(post => post.id === openPost.id) : -1;
   const visiblePosts = openPostIndex < 0 ? stagePosts : [stagePosts[openPostIndex], ...stagePosts.filter((_, index) => index !== openPostIndex)];
   const completed: Record<Stage, boolean> = { prework: !!prework.trim(), prd: !!prd.problem.trim(), share: !!outcome.id };
+
+  async function closeGuide(startWriting = false) {
+    setGuideOpen(false);
+    if (startWriting) { setOpenPost(null); setPageMode('editor'); }
+    if (!user || profile?.preworkGuideSeenAt) return;
+    setProfile(previous => previous ? { ...previous, preworkGuideSeenAt: new Date().toISOString() } : previous);
+    try {
+      const token = await user.getIdToken();
+      const response = await fetch('/api/guide-seen', { method: 'POST', headers: { Authorization: `Bearer ${token}` } });
+      if (!response.ok) throw new Error('Could not save guide preference.');
+    } catch {
+      setMessage('The guide may appear again next time. You can still open it from the Pre-work page.');
+    }
+  }
 
   async function register(event: React.FormEvent) {
     event.preventDefault(); setMessage(''); setBusy(true);
@@ -236,7 +257,7 @@ export default function Home() {
     <div className="workspace">
       <nav className="stage-nav" aria-label="Workshop stages">{stages.filter(s => allowed(s.key)).map(s => <button key={s.key} className={`stage-tab ${view === s.key ? 'current' : ''}`} onClick={() => { if (editing) void cancelEdit(); setView(s.key); setPageMode('board'); setOpenPost(null); }}><span className="stage-number">{s.number}</span><span>{s.short}</span>{completed[s.key] && <span className="complete-mark" aria-label="Completed">✓</span>}</button>)}{isAdmin && <button className={`stage-tab admin-tab ${view === 'admin' ? 'current' : ''}`} onClick={() => { if (editing) void cancelEdit(); setView('admin'); setOpenPost(null); loadAdmin(); }}>Admin</button>}</nav>
       {message && <div role="status" className="notice">{message}<button className="notice-close" aria-label="Dismiss message" onClick={() => setMessage('')}>×</button></div>}
-      {active && allowed(active.key) && <><section className="section-heading stage-heading"><div><p className="eyebrow">STEP {active.number} / 03</p><h2>{pageMode === 'editor' ? (view === 'prework' ? 'Write your Pre-work post' : view === 'prd' ? 'Write your Problem & PRD post' : 'Share your outcome') : active.title}</h2><p>{pageMode === 'editor' && view === 'prework' ? 'Use the guide while you shape your problem statement.' : active.description}</p></div><button className={pageMode === 'editor' ? 'secondary' : ''} onClick={() => { if (pageMode === 'editor') { if (editing) void cancelEdit(); else setPageMode('board'); } else { setOpenPost(null); setPageMode('editor'); } }}>{pageMode === 'editor' ? '← Back to posts' : '+ New post'}</button></section>
+      {active && allowed(active.key) && <><section className="section-heading stage-heading"><div><p className="eyebrow">STEP {active.number} / 03</p><h2>{pageMode === 'editor' ? (view === 'prework' ? 'Write your Pre-work post' : view === 'prd' ? 'Write your Problem & PRD post' : 'Share your outcome') : active.title}</h2><p>{pageMode === 'editor' && view === 'prework' ? 'Use the guide while you shape your problem statement.' : active.description}</p></div><div className="stage-actions">{view === 'prework' && pageMode === 'board' && <button className="secondary" onClick={() => setGuideOpen(true)}>Guide</button>}<button className={pageMode === 'editor' ? 'secondary' : ''} onClick={() => { if (pageMode === 'editor') { if (editing) void cancelEdit(); else setPageMode('board'); } else { setOpenPost(null); setPageMode('editor'); } }}>{pageMode === 'editor' ? '← Back to posts' : '+ New post'}</button></div></section>
         {editing?.stage === view && <div className="editing-banner">Editing {editing.post.ownerName || 'participant'}’s post <button className="inline-link" onClick={cancelEdit}>Cancel editing</button></div>}
         {view === 'prework' && pageMode === 'editor' && <section className="editor-panel prework-editor"><div className="panel-heading"><div><p className="eyebrow">YOUR CONTRIBUTION</p><h3>Define a school challenge</h3></div><span className="privacy-pill">Shared with the group</span></div><div className="prework-columns"><aside className="assignment-guide"><div className="column-label">ASSIGNMENT GUIDE</div><div className="markdown"><ReactMarkdown>{content}</ReactMarkdown></div></aside><div className="statement-column"><div className="column-label">YOUR RESPONSE</div><label htmlFor="prework">Problem statement</label><p className="field-help">Write one clear statement using the template on the left.</p><textarea id="prework" className="large-editor" placeholder="[WHO] struggle(s) to [SPECIFIC TASK OR PAIN] when [SITUATION / CONTEXT] because [ROOT CAUSE]." value={prework} onChange={e => setPrework(e.target.value)}/><p className="field-help">Your post will be visible to other workshop participants.</p></div></div><div className="editor-footer"><p>You can update your statement later.</p><button disabled={busy} onClick={savePrework}>{posts.prework.some(p => p.id === user.uid) || editing?.stage === 'prework' ? 'Update post' : 'Publish post'} <span aria-hidden="true">↗</span></button></div></section>}
         {view === 'prd' && pageMode === 'editor' && <section className="editor-panel"><div className="panel-heading"><div><p className="eyebrow">YOUR CONTRIBUTION</p><h3>Define the problem and plan</h3></div><span className="privacy-pill">Shared with the group</span></div><div className="context-note"><strong>From your Pre-work</strong><p>{prework || 'Your saved problem statement will appear here.'}</p></div><div className="form-grid">{([['problem', 'Problem', 'What problem are you trying to address?'], ['user', 'User', 'Who will use the app?'], ['goal', 'Goal', 'What should users be able to do with the app?'], ['features', 'Core features', 'What are the one or two most important features?']] as const).map(([key, title, hint]) => <div className="field" key={key}><label htmlFor={`prd-${key}`}>{title}</label><textarea id={`prd-${key}`} placeholder={hint} value={prd[key]} onChange={e => setPrd({ ...prd, [key]: e.target.value })}/></div>)}</div><div className="editor-footer"><p>Your plan will appear in the shared Problem & PRD board.</p><div className="actions"><button className="secondary" onClick={downloadPrd}>Download .md</button><button disabled={busy} onClick={savePrd}>{posts.prd.some(p => p.id === user.uid) ? 'Update post' : 'Publish post'} <span aria-hidden="true">↗</span></button></div></div></section>}
@@ -245,7 +266,22 @@ export default function Home() {
       </>}
       {view === 'admin' && isAdmin && <section className="admin-area"><div className="section-heading"><p className="eyebrow">WORKSHOP MANAGEMENT</p><h2>Admin controls</h2><p>Manage access, accounts, and contributions across all stages.</p></div><div className="admin-section"><h3>Stage visibility</h3><p className="muted">You can always open every stage. Participants see only the stages you enable.</p><div className="visibility-grid">{stages.map(stage => <div className="visibility-card" key={stage.key}><span className="stage-number">{stage.number}</span><strong>{stage.title}</strong><span className={`status-pill ${settings[stage.key] ? 'open' : ''}`}>{settings[stage.key] ? 'Open' : 'Hidden'}</span><button className="secondary" onClick={() => toggle(stage.key)}>{settings[stage.key] ? 'Hide from participants' : 'Open to participants'}</button></div>)}</div></div><div className="admin-section"><h3>Participant accounts</h3><div className="table-wrap"><table className="admin-table"><thead><tr><th>Nickname</th><th>Email</th><th>New password</th><th></th></tr></thead><tbody>{users.map(account => <UserRow key={account.uid} account={account} onSave={editUser}/>)}</tbody></table></div></div><div className="admin-section"><h3>All contributions</h3>{stages.map(stage => <div className="admin-post-group" key={stage.key}><h4>{stage.title} <span>{adminPosts[stage.key].length}</span></h4>{adminPosts[stage.key].map(post => <div className="admin-post" key={post.id}><div><strong>{post.name || post.text?.slice(0, 75) || post.problem?.slice(0, 75) || 'Untitled'}</strong><small>{post.ownerName || post.ownerId} · {post.isPublic ? 'Shared' : 'Private legacy post'}</small></div><div className="actions"><button className="secondary" onClick={() => editPost(stage.key, post)}>Edit</button><button className="danger" onClick={() => removePost(stage.key, post)}>Delete</button></div></div>)}</div>)}</div></section>}
     </div>
+    {guideOpen && <AssignmentGuideModal content={content} onClose={() => void closeGuide()} onStart={() => void closeGuide(true)}/>}
   </main>;
+}
+
+function AssignmentGuideModal({ content, onClose, onStart }: { content: string; onClose: () => void; onStart: () => void }) {
+  const dialogRef = useRef<HTMLDialogElement>(null);
+  useEffect(() => {
+    const dialog = dialogRef.current;
+    dialog?.showModal();
+    return () => { if (dialog?.open) dialog.close(); };
+  }, []);
+  return <dialog ref={dialogRef} className="guide-dialog" aria-labelledby="guide-dialog-title" onCancel={event => { event.preventDefault(); onClose(); }} onClick={event => { if (event.target === event.currentTarget) onClose(); }}>
+    <div className="guide-dialog-header"><div><p className="eyebrow">BEFORE YOU BEGIN</p><h2 id="guide-dialog-title">Pre-work assignment guide</h2><p>Read the task, then share one challenge from your school or teaching context.</p></div><button className="guide-dialog-close" aria-label="Close guide" onClick={onClose}>×</button></div>
+    <div className="guide-dialog-content markdown">{content ? <ReactMarkdown>{content}</ReactMarkdown> : <p>The guide is loading. Please try again in a moment.</p>}</div>
+    <div className="guide-dialog-footer"><button className="secondary" onClick={onClose}>Back to posts</button><button onClick={onStart}>Write my post →</button></div>
+  </dialog>;
 }
 
 function UserRow({ account, onSave }: { account: any; onSave: (uid: string, nickname: string, password: string) => void }) {

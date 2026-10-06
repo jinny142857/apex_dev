@@ -77,7 +77,8 @@ a{color:var(--blue)}
 .section-heading>p:last-child{margin:0;color:var(--muted)}
 .stage-heading{display:flex;align-items:flex-end;justify-content:space-between;gap:20px}
 .stage-heading>div>p:last-child{margin:0;color:var(--muted)}
-.stage-heading>button{min-width:120px;white-space:nowrap}
+.stage-actions{display:flex;align-items:center;gap:9px;flex:none}
+.stage-actions>button{min-width:110px;white-space:nowrap}
 .editing-banner{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:15px;padding:11px 15px;border:1px solid #d7e3ed;border-radius:10px;background:#edf5fb;color:#31577c;font-size:.86rem;font-weight:700}
 .editor-panel,.admin-section{border:1px solid var(--line);border-radius:15px;background:#fff;box-shadow:0 7px 28px #1b354c08}
 .editor-panel{padding:30px}
@@ -102,6 +103,15 @@ a{color:var(--blue)}
 .assignment-guide .markdown h1{margin:12px 0 16px;font-size:1.1rem}
 .assignment-guide .markdown h2{margin:19px 0 6px}
 .assignment-guide .markdown p,.assignment-guide .markdown li{line-height:1.65}
+.guide-dialog{width:min(720px,calc(100vw - 32px));max-height:min(820px,calc(100dvh - 40px));padding:0;border:1px solid #ccdeec;border-radius:17px;background:#fff;color:var(--ink);box-shadow:0 28px 80px #122c4b38}
+.guide-dialog::backdrop{background:#10243fb3;backdrop-filter:blur(4px)}
+.guide-dialog-header{display:flex;align-items:flex-start;justify-content:space-between;gap:20px;padding:26px 30px 18px;border-bottom:1px solid var(--line)}
+.guide-dialog-header h2{margin:4px 0 5px;font-size:1.65rem;letter-spacing:-.05em}
+.guide-dialog-header p:last-child{margin:0;color:var(--muted);font-size:.9rem}
+.guide-dialog-close{flex:none;width:34px;height:34px;padding:0;border:1px solid var(--line);background:#f5f8fb;color:var(--navy);font-size:1.5rem;line-height:1}
+.guide-dialog-content{max-width:none;max-height:calc(min(820px,100dvh - 40px) - 190px);overflow:auto;padding:8px 30px 24px}
+.guide-dialog-content h1{font-size:1.2rem}
+.guide-dialog-footer{display:flex;justify-content:flex-end;gap:9px;padding:17px 30px;border-top:1px solid var(--line);background:#fbfdff}
 .statement-column{display:flex;flex-direction:column;min-width:0}
 .statement-column label{margin:22px 0 3px;font-size:1rem}
 .statement-column .large-editor{flex:1;min-height:420px;margin-top:12px}
@@ -175,4 +185,4 @@ a{color:var(--blue)}
 .admin-post button{padding:7px 10px;font-size:.78rem}
 @media(max-width:850px){.post-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.stage-nav{gap:15px}}
 @media(max-width:760px){.prework-columns{grid-template-columns:1fr}.assignment-guide{max-height:none}.statement-column .large-editor{min-height:260px}.stage-heading{align-items:flex-start;flex-direction:column}}
-@media(max-width:620px){.auth-header{padding:22px 20px}.auth-main{margin:35px auto}.auth-card{padding:24px 20px}.auth-links{align-items:flex-start;flex-direction:column}.topbar-inner{padding:10px 17px}.brand strong{font-size:.93rem}.account-name{display:none}.workspace{padding:12px 15px 60px}.stage-nav{overflow:auto;margin:0 0 26px}.stage-tab{padding:10px 0}.stage-number{display:none}.editor-panel{padding:20px}.panel-heading,.editor-footer{align-items:flex-start;flex-direction:column}.form-grid,.post-grid,.visibility-grid{grid-template-columns:1fr}.post-excerpt{min-height:0}.post-card.expanded{padding:20px}.reader-navigation{gap:6px}.reader-navigation button{min-width:0;padding:8px;font-size:.72rem}}
+@media(max-width:620px){.auth-header{padding:22px 20px}.auth-main{margin:35px auto}.auth-card{padding:24px 20px}.auth-links{align-items:flex-start;flex-direction:column}.topbar-inner{padding:10px 17px}.brand strong{font-size:.93rem}.account-name{display:none}.workspace{padding:12px 15px 60px}.stage-nav{overflow:auto;margin:0 0 26px}.stage-tab{padding:10px 0}.stage-number{display:none}.editor-panel{padding:20px}.panel-heading,.editor-footer{align-items:flex-start;flex-direction:column}.form-grid,.post-grid,.visibility-grid{grid-template-columns:1fr}.post-excerpt{min-height:0}.post-card.expanded{padding:20px}.reader-navigation{gap:6px}.reader-navigation button{min-width:0;padding:8px;font-size:.72rem}.stage-actions{width:100%}.stage-actions>button{flex:1;min-width:0}.guide-dialog-header{padding:20px}.guide-dialog-header h2{font-size:1.35rem}.guide-dialog-content{padding:8px 20px 20px}.guide-dialog-footer{padding:14px 20px}.guide-dialog-footer button{flex:1;padding:10px 8px}}
