@@ -16,7 +16,7 @@ export async function POST(request: NextRequest) {
   await adminAuth().setCustomUserClaims(user.uid, { admin: true });
   await adminDb().collection('users').doc(user.uid).set({ nickname, email, role: 'admin', createdAt: new Date().toISOString() }, { merge: true });
   const siteSettings = adminDb().collection('settings').doc('site');
-  if (!(await siteSettings.get()).exists) await siteSettings.set({ prework: true, prd: false, share: false });
+  if (!(await siteSettings.get()).exists) await siteSettings.set({ prework: true, practice: false, prd: false, share: false, evaluation: false });
   const examplePost = adminDb().collection('prework').doc('example-admin');
   if (!(await examplePost.get()).exists) {
     const contentResponse = await fetch(new URL('/content/problem-statement-assignment.md', request.url));
