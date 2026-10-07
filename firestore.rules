@@ -13,37 +13,37 @@ service cloud.firestore {
       allow read: if signedIn() && (resource.data.isPublic == true || owner(userId) || admin());
       allow create: if admin() || (owner(userId) && request.resource.data.ownerId == userId);
       allow update: if admin() || (owner(userId) && request.resource.data.ownerId == resource.data.ownerId);
-      allow delete: if owner(userId) || admin();
+      allow delete: if false;
     }
     match /prds/{userId} {
       allow read: if signedIn() && (resource.data.isPublic == true || owner(userId) || admin());
       allow create: if owner(userId) && request.resource.data.ownerId == userId;
       allow update: if admin() || (owner(userId) && request.resource.data.ownerId == resource.data.ownerId);
-      allow delete: if owner(userId) || admin();
+      allow delete: if false;
     }
     match /projects/{projectId} {
       allow read: if signedIn() && (resource.data.isPublic == true || owner(resource.data.ownerId) || admin());
       allow create: if signedIn() && request.resource.data.ownerId == request.auth.uid;
       allow update: if admin() || (owner(resource.data.ownerId) && request.resource.data.ownerId == resource.data.ownerId);
-      allow delete: if owner(resource.data.ownerId) || admin();
+      allow delete: if false;
     }
     match /projects/{projectId}/comments/{commentId} {
       allow read: if signedIn();
       allow create: if signedIn() && request.resource.data.authorId == request.auth.uid;
-      allow update: if admin() || (owner(resource.data.authorId) && request.resource.data.authorId == resource.data.authorId);
-      allow delete: if owner(resource.data.authorId) || admin() || get(/databases/$(database)/documents/projects/$(projectId)).data.ownerId == request.auth.uid;
+      allow update: if admin() || (owner(resource.data.authorId) && request.resource.data.authorId == resource.data.authorId) || (get(/databases/$(database)/documents/projects/$(projectId)).data.ownerId == request.auth.uid && request.resource.data.authorId == resource.data.authorId);
+      allow delete: if false;
     }
     match /prework/{userId}/comments/{commentId} {
       allow read: if signedIn();
       allow create: if signedIn() && request.resource.data.authorId == request.auth.uid;
-      allow update: if admin() || (owner(resource.data.authorId) && request.resource.data.authorId == resource.data.authorId);
-      allow delete: if owner(resource.data.authorId) || owner(userId) || admin();
+      allow update: if admin() || (owner(resource.data.authorId) && request.resource.data.authorId == resource.data.authorId) || (owner(userId) && request.resource.data.authorId == resource.data.authorId);
+      allow delete: if false;
     }
     match /prds/{userId}/comments/{commentId} {
       allow read: if signedIn();
       allow create: if signedIn() && request.resource.data.authorId == request.auth.uid;
-      allow update: if admin() || (owner(resource.data.authorId) && request.resource.data.authorId == resource.data.authorId);
-      allow delete: if owner(resource.data.authorId) || owner(userId) || admin();
+      allow update: if admin() || (owner(resource.data.authorId) && request.resource.data.authorId == resource.data.authorId) || (owner(userId) && request.resource.data.authorId == resource.data.authorId);
+      allow delete: if false;
     }
   }
 }

@@ -62,6 +62,7 @@ Firebase Spark 무료 플랜은 15명 안팎의 연수 운영에 필요한 Authe
 ## 운영 데이터 보호
 
 - 운영 데이터는 Firestore의 `prework`, `prds`, `projects`, `users`, `apexDevSurveys`, `apexDevEvaluation`, `apexDevTeamRepresentatives`, `apexDevFinalScores`에 보관됩니다. 기본 설문 생성과 관리자 초기 설정은 존재하는 문서를 삭제하거나 초기화하지 않습니다.
+- 게시글·댓글의 앱 내 삭제는 이제 문서를 지우지 않고 보관 처리합니다. [`firestore.rules`](./firestore.rules)는 물리 삭제도 차단하므로, 연수 전에 기존 Firebase 규칙에 이 변경을 병합·게시하세요. 이 파일만 Git에 올리는 것으로는 실제 Firebase 규칙이 바뀌지 않습니다.
 - 운영 중에는 Firebase Console에서 컬렉션을 삭제하거나, Firestore 규칙을 파일 전체로 덮어쓰지 마세요. 배포 전에는 Firestore의 기존 규칙을 백업하고 SchoolLab 관련 규칙만 병합합니다.
 - 연수 시작 전 Firebase/Google Cloud의 Firestore 내보내기 또는 백업 정책을 한 번 설정해 두면, 실수로 인한 데이터 변경에도 더 안전합니다.
 

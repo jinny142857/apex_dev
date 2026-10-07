@@ -300,8 +300,9 @@ a{color:var(--blue)}
 .presentation-main{display:flex;flex-direction:column;min-width:0;min-height:0;overflow:auto;padding:15px}
 .presentation-browser{display:flex;flex-direction:column;min-height:300px;flex:1;overflow:hidden;border:1px solid #cbd9e5;border-radius:12px;background:#fff;box-shadow:0 8px 22px #1c36561a}
 .presentation-browser-bar{display:flex;align-items:center;gap:12px;min-height:38px;padding:5px 13px;border-bottom:1px solid #dce5ed;background:#f7f9fc;font-size:.7rem}
-.browser-dots{display:flex;gap:5px}
-.browser-dots i{width:8px;height:8px;border-radius:50%;background:#7fb5db}.browser-dots i:nth-child(2){background:#a8c9e2}.browser-dots i:nth-child(3){background:#c1d8e9}
+.browser-dots{display:flex;gap:7px}
+.browser-dots i{display:block;width:12px;height:12px;border:1px solid #00000020;border-radius:50%;box-shadow:inset 0 1px #fff6}
+.browser-dots .browser-close{background:#ff5f57}.browser-dots .browser-minimize{background:#febc2e}.browser-dots .browser-maximize{background:#28c840}
 .browser-address{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--muted)}
 .presentation-browser-bar a{flex:none;font-weight:700;text-decoration:none}
 .presentation-browser iframe{width:100%;height:100%;min-height:300px;flex:1;border:0;background:#fff}

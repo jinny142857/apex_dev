@@ -9,7 +9,7 @@ import HomeNotices from '@/app/components/HomeNotices';
 import { LanguageSwitch, useLanguage } from '@/app/components/LanguageProvider';
 import { clientAuth, clientDb } from '@/lib/firebase';
 import { onAuthStateChanged, sendPasswordResetEmail, signInWithCustomToken, signInWithEmailAndPassword, signOut, type User } from 'firebase/auth';
-import { addDoc, collection, deleteDoc, doc, getDoc, getDocs, onSnapshot, query, serverTimestamp, setDoc, updateDoc, where } from 'firebase/firestore';
+import { addDoc, collection, doc, getDoc, getDocs, onSnapshot, query, serverTimestamp, setDoc, updateDoc, where } from 'firebase/firestore';
 
 type Stage = 'prework' | 'practice' | 'prd' | 'share';
 type View = Stage | 'home' | 'evaluation' | 'surveys' | 'admin';
@@ -163,7 +163,7 @@ export default function Home() {
     setBusy(true);
     try {
       const target = editing?.stage === 'prework' ? editing.post : null;
-      await setDoc(doc(clientDb(), 'prework', target?.id || user.uid), { ownerId: target?.ownerId || user.uid, ownerName: target?.ownerName || name, text: prework.trim(), isPublic: true, updatedAt: serverTimestamp() }, { merge: true });
+      await setDoc(doc(clientDb(), 'prework', target?.id || user.uid), { ownerId: target?.ownerId || user.uid, ownerName: target?.ownerName || name, text: prework.trim(), isPublic: true, isArchived: false, archivedAt: null, archivedBy: null, updatedAt: serverTimestamp() }, { merge: true });
       setEditing(null);
       if (target && target.ownerId !== user.uid) setPrework((await getDoc(doc(clientDb(), 'prework', user.uid))).data()?.text || '');
       setMessage('Your pre-work is published to the group.');
@@ -176,7 +176,7 @@ export default function Home() {
     setBusy(true);
     try {
       const target = editing?.stage === 'prd' ? editing.post : null;
-      await setDoc(doc(clientDb(), 'prds', target?.id || user.uid), { ...prd, ownerId: target?.ownerId || user.uid, ownerName: target?.ownerName || name, isPublic: true, updatedAt: serverTimestamp() }, { merge: true });
+      await setDoc(doc(clientDb(), 'prds', target?.id || user.uid), { ...prd, ownerId: target?.ownerId || user.uid, ownerName: target?.ownerName || name, isPublic: true, isArchived: false, archivedAt: null, archivedBy: null, updatedAt: serverTimestamp() }, { merge: true });
       setEditing(null);
       if (target && target.ownerId !== user.uid) setPrd({ ...emptyPrd, ...((await getDoc(doc(clientDb(), 'prds', user.uid))).data() || {}) });
       setMessage('Your problem definition and PRD are published to the group.');
@@ -193,7 +193,7 @@ export default function Home() {
       const target = editing?.stage === 'practice' ? editing.post : null;
       const practiceCollection = collection(clientDb(), 'projects');
       const ref = target?.id || practice.id ? doc(practiceCollection, target?.id || practice.id) : doc(practiceCollection);
-      await setDoc(ref, { name: practice.name.trim(), url: practice.url.trim(), guide: practice.guide.trim(), stage: 'practice', ownerId: target?.ownerId || user.uid, ownerName: target?.ownerName || name, isPublic: true, updatedAt: serverTimestamp() }, { merge: true });
+      await setDoc(ref, { name: practice.name.trim(), url: practice.url.trim(), guide: practice.guide.trim(), stage: 'practice', ownerId: target?.ownerId || user.uid, ownerName: target?.ownerName || name, isPublic: true, isArchived: false, archivedAt: null, archivedBy: null, updatedAt: serverTimestamp() }, { merge: true });
       setEditing(null);
       if (target && target.ownerId !== user.uid) {
         const mine = await getDocs(query(collection(clientDb(), 'projects'), where('ownerId', '==', user.uid)));
@@ -217,7 +217,7 @@ export default function Home() {
     try {
       const { id, ...fields } = outcome;
       const target = editing?.stage === 'share' ? editing.post : null;
-      const data = { ...fields, ownerId: target?.ownerId || user.uid, ownerName: target?.ownerName || name, isPublic: true, updatedAt: serverTimestamp() };
+      const data = { ...fields, ownerId: target?.ownerId || user.uid, ownerName: target?.ownerName || name, isPublic: true, isArchived: false, archivedAt: null, archivedBy: null, updatedAt: serverTimestamp() };
       if (id) await setDoc(doc(clientDb(), 'projects', id), data, { merge: true });
       else { const ref = doc(collection(clientDb(), 'projects')); await setDoc(ref, data); setOutcome(previous => ({ ...previous, id: ref.id })); }
       setEditing(null);
@@ -232,16 +232,16 @@ export default function Home() {
     finally { setBusy(false); }
   }
   async function removePost(stage: Stage, post: Post) {
-    if (!window.confirm('Delete this post? This cannot be undone.')) return;
+    if (!window.confirm('Remove this post from the shared board? It will be retained for recovery.')) return;
     const collectionName = stage === 'prd' ? 'prds' : stage === 'prework' ? 'prework' : 'projects';
-    await deleteDoc(doc(clientDb(), collectionName, post.id));
+    await updateDoc(doc(clientDb(), collectionName, post.id), { isPublic: false, isArchived: true, archivedAt: serverTimestamp(), archivedBy: user?.uid || null });
     if (post.ownerId === user?.uid) {
       if (stage === 'prework') setPrework('');
       if (stage === 'practice') setPractice({ ...emptyPractice, id: '' });
       if (stage === 'prd') setPrd(emptyPrd);
       if (stage === 'share') setOutcome({ ...emptyOutcome, id: '' });
     }
-    setMessage('Post deleted.');
+    setMessage('Post removed from the shared board. The record is retained for recovery.');
     if (isAdmin) loadAdmin();
   }
   async function toggle(stage: Stage | 'evaluation') { await setDoc(doc(clientDb(), 'settings', 'site'), { [stage]: !settings[stage] }, { merge: true }); }
@@ -326,7 +326,7 @@ export default function Home() {
       </>}
       {view === 'surveys' && <SurveyPanel user={user} isAdmin={isAdmin}/>}
       {view === 'evaluation' && allowed('evaluation') && <>{isAdmin && !settings.evaluation && <p className="notice">Evaluation is currently hidden from participants. Open it in Admin controls when you are ready.</p>}<EvaluationPanel user={user} isAdmin={!!isAdmin} displayName={name} outcomes={posts.share} onOpenOutcomes={() => { setView('share'); setPageMode('board'); }}/></>}
-      {view === 'admin' && isAdmin && <section className="admin-area"><div className="section-heading"><p className="eyebrow">WORKSHOP MANAGEMENT</p><h2>Admin controls</h2><p>Manage access, accounts, and contributions across all stages.</p></div><div className="admin-section"><h3>Stage visibility</h3><p className="muted">Every stage remains in the menu. Closed stages show a workshop-day notice to participants; you can always access them.</p><div className="visibility-grid">{[...stages, evaluationStage].map(stage => <div className="visibility-card" key={stage.key}><span className="stage-number">{stage.number}</span><strong>{stage.title}</strong><span className={`status-pill ${settings[stage.key] ? 'open' : ''}`}>{settings[stage.key] ? 'Open' : 'Opens workshop day'}</span><button className="secondary" onClick={() => toggle(stage.key)}>{settings[stage.key] ? 'Close for participants' : 'Open to participants'}</button></div>)}</div></div><div className="admin-section"><h3>Participant accounts</h3><div className="table-wrap"><table className="admin-table"><thead><tr><th>Nickname</th><th>Email</th><th>New password</th><th></th></tr></thead><tbody>{users.map(account => <UserRow key={account.uid} account={account} onSave={editUser}/>)}</tbody></table></div></div><div className="admin-section"><h3>All contributions</h3>{stages.map(stage => <div className="admin-post-group" key={stage.key}><h4>{stage.title} <span>{adminPosts[stage.key].length}</span></h4>{adminPosts[stage.key].map(post => <div className="admin-post" key={post.id}><div><strong>{post.name || post.text?.slice(0, 75) || post.problem?.slice(0, 75) || 'Untitled'}</strong><small>{post.ownerName || post.ownerId} · {post.isPublic ? 'Shared' : 'Private legacy post'}</small></div><div className="actions"><button className="secondary" onClick={() => editPost(stage.key, post)}>Edit</button><button className="danger" onClick={() => removePost(stage.key, post)}>Delete</button></div></div>)}</div>)}</div></section>}
+      {view === 'admin' && isAdmin && <section className="admin-area"><div className="section-heading"><p className="eyebrow">WORKSHOP MANAGEMENT</p><h2>Admin controls</h2><p>Manage access, accounts, and contributions across all stages.</p></div><div className="admin-section"><h3>Stage visibility</h3><p className="muted">Every stage remains in the menu. Closed stages show a workshop-day notice to participants; you can always access them.</p><div className="visibility-grid">{[...stages, evaluationStage].map(stage => <div className="visibility-card" key={stage.key}><span className="stage-number">{stage.number}</span><strong>{stage.title}</strong><span className={`status-pill ${settings[stage.key] ? 'open' : ''}`}>{settings[stage.key] ? 'Open' : 'Opens workshop day'}</span><button className="secondary" onClick={() => toggle(stage.key)}>{settings[stage.key] ? 'Close for participants' : 'Open to participants'}</button></div>)}</div></div><div className="admin-section"><h3>Participant accounts</h3><div className="table-wrap"><table className="admin-table"><thead><tr><th>Nickname</th><th>Email</th><th>New password</th><th></th></tr></thead><tbody>{users.map(account => <UserRow key={account.uid} account={account} onSave={editUser}/>)}</tbody></table></div></div><div className="admin-section"><h3>All contributions</h3>{stages.map(stage => <div className="admin-post-group" key={stage.key}><h4>{stage.title} <span>{adminPosts[stage.key].length}</span></h4>{adminPosts[stage.key].map(post => <div className="admin-post" key={post.id}><div><strong>{post.name || post.text?.slice(0, 75) || post.problem?.slice(0, 75) || 'Untitled'}</strong><small>{post.ownerName || post.ownerId} · {post.isPublic ? 'Shared' : 'Private legacy post'}</small></div><div className="actions"><button className="secondary" onClick={() => editPost(stage.key, post)}>Edit</button><button className="danger" onClick={() => removePost(stage.key, post)}>Remove</button></div></div>)}</div>)}</div></section>}
     </div>
     {guideOpen && <AssignmentGuideModal content={content} onClose={() => void closeGuide()} onStart={() => void closeGuide(true)}/>}
   </main>;
@@ -363,7 +363,7 @@ function PostCard({ stage, post, currentUser, isAdmin, expanded, position, total
   const collectionName = stage === 'prd' ? 'prds' : stage === 'prework' ? 'prework' : 'projects';
   useEffect(() => {
     if (!expanded) return;
-    return onSnapshot(collection(clientDb(), collectionName, post.id, 'comments'), snapshot => setComments(snapshot.docs.map(d => ({ id: d.id, ...d.data() }))));
+    return onSnapshot(collection(clientDb(), collectionName, post.id, 'comments'), snapshot => setComments(snapshot.docs.filter(d => !(d.data() as { isArchived?: boolean }).isArchived).map(d => ({ id: d.id, ...d.data() }))));
   }, [expanded, collectionName, post.id]);
   async function sendFeedback() {
     if (!feedback.trim()) return;
@@ -387,8 +387,8 @@ function PostCard({ stage, post, currentUser, isAdmin, expanded, position, total
     </div> : <p className="post-excerpt">{excerpt || 'Open this post to explore the details.'}</p>}
     <div className="post-card-bottom"><span>By <strong>{post.ownerName || 'Participant'}</strong></span><button className="inline-link" onClick={onToggle} aria-expanded={expanded}>{expanded ? 'Close' : 'Read post'} <span aria-hidden="true">↗</span></button></div>
     {expanded && <div className="post-interactions">
-      {canManage && <div className="post-tools"><button className="secondary" onClick={() => onEdit(stage, post)}>Edit</button><button className="danger" onClick={() => onDelete(stage, post)}>Delete</button></div>}
-      <div className="feedback"><h4>Feedback</h4>{comments.map(comment => <div className="comment" key={comment.id}><p>{comment.text}</p><div><small>{comment.authorName || 'Participant'} · {comment.createdAt?.toDate?.().toLocaleDateString?.() || 'Just now'}</small><span>{(comment.authorId === currentUser.uid || isAdmin) && <button className="inline-link" onClick={() => editFeedback(comment)}>Edit</button>}{(comment.authorId === currentUser.uid || canManage) && <button className="inline-link" onClick={() => deleteDoc(doc(clientDb(), collectionName, post.id, 'comments', comment.id))}>Delete</button>}</span></div></div>)}<div className="feedback-form"><input aria-label="Write feedback" placeholder="Write a thoughtful comment…" value={feedback} onChange={e => setFeedback(e.target.value)}/><button onClick={sendFeedback}>Post</button></div></div>
+      {canManage && <div className="post-tools"><button className="secondary" onClick={() => onEdit(stage, post)}>Edit</button><button className="danger" onClick={() => onDelete(stage, post)}>Remove</button></div>}
+      <div className="feedback"><h4>Feedback</h4>{comments.map(comment => <div className="comment" key={comment.id}><p>{comment.text}</p><div><small>{comment.authorName || 'Participant'} · {comment.createdAt?.toDate?.().toLocaleDateString?.() || 'Just now'}</small><span>{(comment.authorId === currentUser.uid || isAdmin) && <button className="inline-link" onClick={() => editFeedback(comment)}>Edit</button>}{(comment.authorId === currentUser.uid || canManage) && <button className="inline-link" onClick={() => updateDoc(doc(clientDb(), collectionName, post.id, 'comments', comment.id), { isArchived: true, archivedAt: serverTimestamp(), archivedBy: currentUser.uid })}>Remove</button>}</span></div></div>)}<div className="feedback-form"><input aria-label="Write feedback" placeholder="Write a thoughtful comment…" value={feedback} onChange={e => setFeedback(e.target.value)}/><button onClick={sendFeedback}>Post</button></div></div>
     </div>}
   </article>;
 }
