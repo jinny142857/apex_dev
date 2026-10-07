@@ -106,6 +106,10 @@ export default function Home() {
 
   const isAdmin = profile?.role === 'admin';
   const name = profile?.nickname || user?.displayName || 'Participant';
+  useEffect(() => {
+    if (!user || !isAdmin) return;
+    void user.getIdToken().then(token => fetch('/api/surveys/seed', { method: 'POST', headers: { Authorization: `Bearer ${token}` } }));
+  }, [user, isAdmin]);
   const allowed = (stage: Stage | 'evaluation') => isAdmin || settings[stage];
   const active = stages.find(s => s.key === view);
   const stagePosts = active ? posts[active.key] : [];
