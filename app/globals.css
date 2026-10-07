@@ -124,6 +124,14 @@ a{color:var(--blue)}
 .context-note p{margin:5px 0 0;color:#536677;white-space:pre-wrap}
 .form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 20px}
 .form-grid textarea{min-height:140px}
+.panel-subtitle{margin:5px 0 0;color:var(--muted);font-size:.82rem}
+.prd-template-heading{display:flex;align-items:center;gap:13px;margin:25px 0 12px;padding:12px 14px;border:1px solid #d6e7f3;border-radius:12px;background:#f5faff}
+.prd-template-heading>span{display:grid;place-items:center;flex:none;width:43px;height:43px;border-radius:11px;background:#d8edf9;color:#1c5e98;font-size:.72rem;font-weight:900}
+.prd-template-heading strong{display:block;color:#173854;font-size:.88rem}.prd-template-heading p{margin:3px 0 0;color:#64798d;font-size:.76rem}
+.prd-template-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.prd-template-field{position:relative;display:flex;flex-direction:column;gap:7px;min-height:191px;padding:17px;border:1px solid #dbe7f0;border-radius:14px;background:#fbfdff}
+.prd-template-field>span{display:grid;place-items:center;width:28px;height:28px;border-radius:8px;background:#e4f1fa;color:#24679e;font-size:.66rem;font-weight:900}
+.prd-template-field label{margin:0;color:#193955;font-size:.93rem;font-weight:850}.prd-template-field textarea{min-height:88px;flex:1;margin:0;background:#fff}
 .optional{margin-left:5px;color:#8a99a7;font-weight:400}
 .board{margin-top:55px}
 .board.board-primary{margin-top:0}
@@ -377,7 +385,7 @@ a{color:var(--blue)}
 @media(max-width:620px){.outcome-hub{padding:21px}.outcome-stats{grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}.outcome-stats>div{padding:10px}.outcome-stats span{font-size:.53rem}.outcome-stats strong{font-size:1.35rem}.outcome-quick-actions{grid-template-columns:1fr}.outcome-quick-actions button{min-height:0}.ceremony-card{padding:40px 23px}}
 @media(max-width:850px){.post-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.stage-nav{gap:15px}}
 @media(max-width:760px){.prework-columns{grid-template-columns:1fr}.assignment-guide{max-height:none}.statement-column .large-editor{min-height:260px}.stage-heading{align-items:flex-start;flex-direction:column}}
-@media(max-width:620px){.auth-header{padding:22px 20px}.auth-main{margin:35px auto}.auth-card{padding:24px 20px}.auth-links{align-items:flex-start;flex-direction:column}.topbar-inner{padding:10px 17px}.brand strong{font-size:.93rem}.account-name{display:none}.workspace{padding:12px 15px 60px}.stage-nav{overflow:auto;margin:0 0 26px}.stage-tab{padding:10px 0}.stage-number{display:none}.editor-panel{padding:20px}.panel-heading,.editor-footer{align-items:flex-start;flex-direction:column}.form-grid,.post-grid,.visibility-grid{grid-template-columns:1fr}.post-excerpt{min-height:0}.post-card.expanded{padding:20px}.reader-navigation{gap:6px}.reader-navigation button{min-width:0;padding:8px;font-size:.72rem}.stage-actions{width:100%}.stage-actions>button{flex:1;min-width:0}.guide-dialog-header{padding:20px}.guide-dialog-header h2{font-size:1.35rem}.guide-dialog-content{padding:8px 20px 20px}.guide-dialog-footer{padding:14px 20px}.guide-dialog-footer button{flex:1;padding:10px 8px}}
+@media(max-width:620px){.auth-header{padding:22px 20px}.auth-main{margin:35px auto}.auth-card{padding:24px 20px}.auth-links{align-items:flex-start;flex-direction:column}.topbar-inner{padding:10px 17px}.brand strong{font-size:.93rem}.account-name{display:none}.workspace{padding:12px 15px 60px}.stage-nav{overflow:auto;margin:0 0 26px}.stage-tab{padding:10px 0}.stage-number{display:none}.editor-panel{padding:20px}.panel-heading,.editor-footer{align-items:flex-start;flex-direction:column}.form-grid,.prd-template-grid,.post-grid,.visibility-grid{grid-template-columns:1fr}.post-excerpt{min-height:0}.post-card.expanded{padding:20px}.reader-navigation{gap:6px}.reader-navigation button{min-width:0;padding:8px;font-size:.72rem}.stage-actions{width:100%}.stage-actions>button{flex:1;min-width:0}.guide-dialog-header{padding:20px}.guide-dialog-header h2{font-size:1.35rem}.guide-dialog-content{padding:8px 20px 20px}.guide-dialog-footer{padding:14px 20px}.guide-dialog-footer button{flex:1;padding:10px 8px}}
 @media(max-width:720px){.home-hero{align-items:flex-start;flex-direction:column;padding:25px}.home-section-heading{align-items:flex-start;flex-direction:column}.journey-grid,.team-assignment-grid,.result-grid{grid-template-columns:1fr}.journey-card{min-height:110px}.utility-card{padding:20px}.survey-card-head,.evaluation-overview{align-items:flex-start;flex-direction:column}}
 
 /* Notice-first home and presentation refinements */
