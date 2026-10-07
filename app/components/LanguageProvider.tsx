@@ -22,7 +22,7 @@ const translations: Record<string, string> = {
   'We use your email for account recovery and workshop communication. Please do not enter student names or sensitive school information.': '이메일은 계정 복구와 워크숍 안내에만 사용합니다. 학생 이름이나 민감한 학교 정보는 입력하지 마세요.',
   'Guide': '과제 안내', 'New post': '새 글', 'Read post': '글 보기', 'Sample preview': '미리보기',
   'Demo mode': 'Demo mode', 'Exit preview': '미리보기 종료', 'Participant view': '참가자 화면',
-  'Admin view': '관리자 화면', 'Team sharing': '팀별 공유', 'Final pitches': '최종 발표',
+  'Admin view': '관리자 화면', 'Team sharing': '대표작 선택', 'Representative selection': '대표작 선택', 'Final pitches': '최종 발표',
   'Award ceremony': '시상식', 'Presentation order': '발표 순서', 'Draw random order': '발표 순서 추첨',
   'Start presentation': '발표 시작', 'Try award ceremony': '시상식 체험',
   'Submit work': '산출물 제출', 'Presentation mode': '발표 모드', 'Individual outcomes': '개별 산출물',

@@ -14,7 +14,7 @@ const products = [
 
 export default function SampleProject() {
   const params = useParams<{ id: string }>();
-  const index = Math.abs(Number(params.id) || 0) % products.length;
+  const index = Math.abs(Number(params?.id ?? 0) || 0) % products.length;
   const product = products[index];
   const [count, setCount] = useState(0);
   const [input, setInput] = useState('');
