@@ -26,20 +26,25 @@ export const demoWorks = [
 ] as const;
 
 export function makeDemoOutcomes(origin: string): OutcomePost[] {
-  return demoPeople.map(([name], index) => ({
+  const featured = [0, 4, 8, 12] as const;
+  const projectIds = [0, 3, 4, 5] as const;
+  return featured.map((personIndex, index) => {
+    const [name] = demoPeople[personIndex];
+    const work = demoWorks[personIndex];
+    return {
     id: `sample-outcome-${index + 1}`,
-    ownerId: `sample-user-${index + 1}`,
+    ownerId: `sample-user-${personIndex + 1}`,
     ownerName: name,
-    name: demoWorks[index][0],
-    url: origin ? `${origin}/preview/project/${({ 0: 0, 4: 3, 8: 4, 12: 5 } as Record<number, number>)[index] ?? index % 4}` : '',
-    problem: demoWorks[index][2],
-    features: demoWorks[index][1],
-    guide: 'Try the interactive preview, then share one idea that could make it more useful in a real classroom.',
-    demoComments: index < 4 ? [
+    name: work[0],
+    url: origin ? `${origin}/preview/project/${projectIds[index]}` : '',
+    problem: work[2],
+    features: work[1],
+    guide: 'Explore the working prototype, then share one concrete idea to make it more useful in a real classroom.',
+    demoComments: [
       { id: `sample-comment-${index}-1`, text: 'The first screen makes the purpose easy to understand.', authorName: 'Mina', authorId: 'sample-user-2' },
       { id: `sample-comment-${index}-2`, text: 'I would love to try this with a small group.', authorName: 'Sam', authorId: 'sample-user-3' },
-    ] : [],
-  }));
+    ],
+  }; });
 }
 
 export const demoPrework = [

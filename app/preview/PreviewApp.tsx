@@ -16,7 +16,7 @@ type Screen = 'home' | 'prework' | 'survey' | 'practice' | 'prd' | 'share' | 'ev
 type DemoPost = { id: string; ownerName: string; name?: string; text?: string; guide?: string; problem?: string; user?: string; goal?: string; features?: string; isExample?: boolean };
 const user = { uid: 'sample-user-1' } as User;
 const screens: { key: Screen; label: string; icon: Parameters<typeof WorkshopIcon>[0]['name'] }[] = [
-  { key: 'home', label: 'Home', icon: 'spark' }, { key: 'prework', label: 'Pre-work', icon: 'assignment' }, { key: 'survey', label: 'Survey', icon: 'survey' }, { key: 'practice', label: 'Warm-up', icon: 'screen' }, { key: 'prd', label: 'Problem & PRD', icon: 'document' }, { key: 'share', label: 'Final outcomes', icon: 'spark' }, { key: 'evaluation', label: 'Present & evaluate', icon: 'trophy' }, { key: 'admin', label: 'Admin', icon: 'people' },
+  { key: 'home', label: 'Home', icon: 'spark' }, { key: 'prework', label: 'Pre-work', icon: 'assignment' }, { key: 'practice', label: 'Warm-up', icon: 'screen' }, { key: 'prd', label: 'Problem & PRD', icon: 'document' }, { key: 'share', label: 'Final outcomes', icon: 'spark' }, { key: 'evaluation', label: 'Present & evaluate', icon: 'trophy' }, { key: 'admin', label: 'Admin', icon: 'people' },
 ];
 
 function PreviewBoard({ title, description, posts, onAdd, kind }: { title: string; description: string; posts: DemoPost[]; onAdd: (post: DemoPost) => void; kind: 'prework' | 'practice' | 'prd' }) {
@@ -43,7 +43,7 @@ function PreviewSurvey() {
 function PreviewEvaluation({ outcomes, admin }: { outcomes: OutcomePost[]; admin: boolean }) {
   const { tr } = useLanguage();
   const [phase, setPhase] = useState<'team' | 'final' | 'award'>('team');
-  const [representatives, setRepresentatives] = useState<Record<string, string>>({ A: 'sample-outcome-1', B: 'sample-outcome-5', C: 'sample-outcome-9', D: 'sample-outcome-13' });
+  const [representatives, setRepresentatives] = useState<Record<string, string>>({ A: 'sample-outcome-1', B: 'sample-outcome-2', C: 'sample-outcome-3', D: 'sample-outcome-4' });
   const [choice, setChoice] = useState('sample-outcome-1');
   const [items, setItems] = useState<{ post: OutcomePost; label: string; scoreId?: string }[] | null>(null);
   const [scores, setScores] = useState<Record<string, Record<string, string>>>({});
