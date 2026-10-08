@@ -41,13 +41,11 @@ export function validateSheet(value: unknown, candidates: string[], rubric: Crit
 }
 
 export function validateFeedback(value: unknown, candidates: string[]): Record<string, ReviewFeedback> {
-  if (!value || typeof value !== 'object' || Array.isArray(value)) throw new Error('Add feedback for every eligible team.');
-  const entries = value as Record<string, ReviewFeedback>;
-  if (Object.keys(entries).length !== candidates.length) throw new Error('Add feedback for every eligible team.');
+  const entries = (value && typeof value === 'object' && !Array.isArray(value)) ? value as Record<string, ReviewFeedback> : {};
   return Object.fromEntries(candidates.map(id => {
     const strength = String(entries[id]?.strength || '').trim();
     const suggestion = String(entries[id]?.suggestion || '').trim();
-    if (!strength || !suggestion || strength.length > 1000 || suggestion.length > 1000) throw new Error('Each team needs one strength and one suggestion (up to 1,000 characters each).');
+    if (strength.length > 1000 || suggestion.length > 1000) throw new Error('Keep feedback under 1,000 characters.');
     return [id, { strength, suggestion }];
   }));
 }

@@ -27,6 +27,12 @@ service cloud.firestore {
       allow update: if admin() || (owner(resource.data.ownerId) && request.resource.data.ownerId == resource.data.ownerId);
       allow delete: if false;
     }
+    match /projects/{projectId}/likes/{uid} {
+      allow read: if signedIn();
+      allow create: if signedIn() && request.auth.uid == uid;
+      allow delete: if signedIn() && request.auth.uid == uid;
+      allow update: if false;
+    }
     match /projects/{projectId}/comments/{commentId} {
       allow read: if signedIn();
       allow create: if signedIn() && request.resource.data.authorId == request.auth.uid;

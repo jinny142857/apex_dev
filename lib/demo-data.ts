@@ -1,4 +1,5 @@
 import type { OutcomePost } from '@/app/components/OutcomeShowcase';
+import { preworkExampleStatement } from '@/lib/prework-example';
 
 export const demoPeople = [
   ['Alex', 'A'], ['Mina', 'A'], ['Sam', 'A'], ['June', 'A'],
@@ -44,20 +45,21 @@ export function makeDemoOutcomes(origin: string): OutcomePost[] {
       { id: `sample-comment-${index}-1`, text: 'The first screen makes the purpose easy to understand.', authorName: 'Mina', authorId: 'sample-user-2' },
       { id: `sample-comment-${index}-2`, text: 'I would love to try this with a small group.', authorName: 'Sam', authorId: 'sample-user-3' },
     ],
+    demoLikes: demoPeople.slice(0, 3 + index).map((_, personOffset) => `sample-user-${personOffset + 1}`),
   }; });
 }
 
 export const demoPrework = [
-  { id: 'sample-pre-1', ownerName: 'admin', text: '[Elementary school teachers] struggle to [plan seating arrangements that support positive peer interaction] when [classroom needs change] because [student needs and relationships must be considered together].', isExample: true },
+  { id: 'sample-pre-1', ownerName: 'admin', text: preworkExampleStatement, isExample: true },
   { id: 'sample-pre-2', ownerName: 'Alex', text: '[Grade 5 teachers] struggle to [hear from every student] during [whole-class discussions] because [a few confident voices often take most of the time].' },
   { id: 'sample-pre-3', ownerName: 'Mina', text: '[Students learning fractions] struggle to [compare different fractions] when [they only see written symbols] because [the relative size is hard to picture].' },
   { id: 'sample-pre-4', ownerName: 'Taylor', text: '[Homeroom teachers] struggle to [summarize weekly updates for families] when [news comes from several channels] because [there is no single place to collect it].' },
 ];
 
 export const demoPractice = [
-  { id: 'sample-practice-1', ownerName: 'Alex', name: 'My first AI-made quiz', guide: 'I followed the example and changed the question style for my class.' },
-  { id: 'sample-practice-2', ownerName: 'Mina', name: 'A tiny timetable app', guide: 'I practiced adjusting the layout and button labels.' },
-  { id: 'sample-practice-3', ownerName: 'Sam', name: 'Quick feedback form', guide: 'I learned how to test the form on a phone.' },
+  { id: 'sample-practice-1', ownerName: 'Alex', name: 'My first AI-made quiz', url: '/preview/project/1', guide: 'I followed the example and changed the question style for my class.' },
+  { id: 'sample-practice-2', ownerName: 'Mina', name: 'A tiny timetable app', url: '/preview/project/2', guide: 'I practiced adjusting the layout and button labels.' },
+  { id: 'sample-practice-3', ownerName: 'Sam', name: 'Quick feedback form', url: '/preview/project/1', guide: 'I learned how to test the form on a phone.' },
 ];
 
 export const demoPrd = [

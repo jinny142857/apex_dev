@@ -14,7 +14,7 @@ export default function ReviewDialog({ team, title, rubric, values, feedback, on
   onClose: () => void;
 }) {
   const total = rubric.reduce((sum, criterion) => sum + Number(values[criterion.id] || 0), 0);
-  const complete = rubric.every(criterion => values[criterion.id]) && !!feedback.strength.trim() && !!feedback.suggestion.trim();
+  const complete = rubric.every(criterion => values[criterion.id]);
   return <div className="rating-backdrop" onClick={onClose}>
     <section className="rating-dialog review-dialog" role="dialog" aria-modal="true" aria-label={`Evaluate ${title}`} onClick={event => event.stopPropagation()}>
       <header><div><span className="eyebrow">TEAM {team} · PEER REVIEW</span><h3>{title}</h3><p>Score the pitch, then leave two constructive notes.</p></div><button className="secondary" onClick={onClose} aria-label="Close evaluation">×</button></header>
@@ -30,7 +30,7 @@ export default function ReviewDialog({ team, title, rubric, values, feedback, on
             {selected > 0 && detail && <p className="review-descriptor"><strong>{scoreLabels[selected - 1]}:</strong> {detail.descriptions[selected - 1]}</p>}
           </fieldset>;
         })}
-        <div className="review-feedback-grid"><label>One strength<textarea maxLength={1000} placeholder="What is useful or promising?" value={feedback.strength} onChange={event => onFeedback('strength', event.target.value)}/></label><label>One suggestion<textarea maxLength={1000} placeholder="What practical change would help?" value={feedback.suggestion} onChange={event => onFeedback('suggestion', event.target.value)}/></label></div>
+        <div className="review-feedback-grid"><label>One strength <span className="optional">optional</span><textarea maxLength={1000} placeholder="What is useful or promising?" value={feedback.strength} onChange={event => onFeedback('strength', event.target.value)}/></label><label>One suggestion <span className="optional">optional</span><textarea maxLength={1000} placeholder="What practical change would help?" value={feedback.suggestion} onChange={event => onFeedback('suggestion', event.target.value)}/></label></div>
       </div>
       <footer><span className="review-total">{total} / {rubric.reduce((sum, criterion) => sum + criterion.maxScore, 0)} points</span><button className="secondary" onClick={onClose}>Continue later</button><button disabled={!complete} onClick={onClose}>Save review</button></footer>
     </section>

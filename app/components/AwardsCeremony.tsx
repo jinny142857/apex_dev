@@ -30,7 +30,7 @@ function playDrumroll(): () => void {
   } catch { return () => {}; }
 }
 
-export default function AwardsCeremony({ team, presenter, members, onClose }: { team: string; presenter: string; members: string[]; onClose: () => void }) {
+export default function AwardsCeremony({ team, presenter, members, onClose, onReveal }: { team: string; presenter: string; members: string[]; onClose: () => void; onReveal?: () => void }) {
   const closeRef = useRef<HTMLButtonElement>(null);
   const timers = useRef<number[]>([]);
   const stopAudio = useRef<() => void>(() => {});
@@ -46,9 +46,9 @@ export default function AwardsCeremony({ team, presenter, members, onClose }: { 
     timers.current = [
       window.setTimeout(() => setCount(2), 950),
       window.setTimeout(() => setCount(1), 1900),
-      window.setTimeout(() => { setPhase('revealed'); stopAudio.current(); }, 2850),
+      window.setTimeout(() => { setPhase('revealed'); stopAudio.current(); onReveal?.(); }, 2850),
     ];
-  }, [phase]);
+  }, [phase, onReveal]);
   useEffect(() => {
     const previous = document.body.style.overflow;
     document.body.style.overflow = 'hidden';

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { adminAuth, adminDb } from '@/lib/firebase-admin';
+import { preworkExampleStatement } from '@/lib/prework-example';
 export async function POST(request: NextRequest) {
   if (request.headers.get('x-setup-secret') !== process.env.ADMIN_SETUP_SECRET) return NextResponse.json({ error: 'Invalid setup secret' }, { status: 401 });
   const email = process.env.ADMIN_EMAIL!, password = process.env.ADMIN_PASSWORD!, nickname = process.env.ADMIN_NICKNAME!;
@@ -31,13 +32,6 @@ export async function POST(request: NextRequest) {
     });
   }
   const examplePost = adminDb().collection('prework').doc('example-admin');
-  if (!(await examplePost.get()).exists) {
-    const contentResponse = await fetch(new URL('/content/problem-statement-assignment.md', request.url));
-    if (!contentResponse.ok) throw new Error('Could not load the Pre-work Markdown file.');
-    const source = await contentResponse.text();
-    const example = source.match(/## Example\s*\n\s*>\s*\*\*([^\n]+?)\*\*/)?.[1];
-    if (!example) throw new Error('The Pre-work Markdown file has no example statement.');
-    await examplePost.set({ ownerId: user.uid, ownerName: nickname, text: example, isPublic: true, isExample: true, createdAt: new Date(), updatedAt: new Date() });
-  }
+  await examplePost.set({ ownerId: user.uid, ownerName: nickname, text: preworkExampleStatement, isPublic: true, isExample: true, isArchived: false, updatedAt: new Date() }, { merge: true });
   return NextResponse.json({ ok: true, message: 'Administrator is ready.' });
 }
