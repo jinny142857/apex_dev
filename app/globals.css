@@ -52,11 +52,15 @@ a{color:var(--blue)}
 .auth-card{position:relative;z-index:1}
 .auth-header{display:flex;align-items:center;gap:12px;max-width:1120px;margin:auto;padding:29px 30px}
 .auth-header strong{font-size:1.28rem;font-weight:800;letter-spacing:-.04em}
-.auth-main{width:min(100% - 32px,520px);margin:58px auto 90px}
+.auth-main{width:min(100% - 32px,520px);margin:32px auto 70px}
 .auth-heading{text-align:center}
 .auth-heading h1{margin:9px 0 6px;font-size:clamp(2rem,3.6vw,2.65rem);line-height:1.15;letter-spacing:-.06em}
 .auth-heading>p:last-child{max-width:450px;margin:0 auto;color:var(--muted);font-size:.97rem;line-height:1.7}
-.auth-card{margin-top:30px;padding:34px 38px 27px;border:1px solid #dce5ed;border-radius:17px;background:#fff;box-shadow:0 16px 45px #183b6710}
+.auth-card{margin-top:22px;padding:28px 38px 25px;border:1px solid #dce5ed;border-radius:17px;background:#fff;box-shadow:0 16px 45px #183b6710}
+.auth-main-signup{margin-top:16px}
+.auth-main-signup .auth-card{margin-top:14px;padding-top:22px;padding-bottom:22px}
+.auth-main-signup .auth-card label{margin-top:14px}
+.auth-main-signup .auth-submit{margin-top:18px}
 .auth-card label:first-child{margin-top:0}
 .auth-card label{margin-top:21px}
 .auth-card input{height:48px}
@@ -64,7 +68,13 @@ a{color:var(--blue)}
 .password-field input{padding-right:67px}
 .show-password{position:absolute;top:4px;right:5px;height:40px;padding:7px 10px;background:none;color:#526d8b;font-size:.76rem}
 .show-password:hover{background:#f0f5f9}
-.auth-submit{width:100%;height:49px;margin-top:27px;background:var(--blue);font-size:.95rem}
+.auth-submit{width:100%;min-height:56px;margin-top:27px;background:var(--blue);font-size:1rem;font-weight:800}
+.auth-signup-entry{display:grid;gap:9px;margin-top:22px;padding-top:18px;border-top:1px solid var(--line)}
+.auth-signup-entry>span{color:var(--muted);font-size:.82rem;font-weight:650}
+.auth-signup-cta{display:flex;align-items:center;justify-content:space-between;width:100%;min-height:56px;padding:13px 18px;border:1.5px solid #a9cde6;border-radius:12px;background:#f0f8fd;color:#245a82;font-size:1rem;font-weight:800;text-align:left}
+.auth-signup-cta:hover{border-color:#6aa9d2;background:#e7f4fc}
+.auth-signup-cta span{font-size:1.2rem}
+.auth-links-end{justify-content:flex-end;margin-top:11px}
 .auth-links{display:flex;align-items:center;justify-content:space-between;gap:5px;flex-wrap:wrap;margin-top:20px;color:var(--muted);font-size:.78rem}
 .auth-links .inline-link{font-size:.79rem}
 .auth-help{margin:13px 0 0;color:var(--muted);font-size:.76rem;line-height:1.6}
