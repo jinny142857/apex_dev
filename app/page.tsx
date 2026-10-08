@@ -422,7 +422,7 @@ function AuthStory({ onSignup, onWatchGuide }: { onSignup: () => void; onWatchGu
   const { tr } = useLanguage();
   return <aside className="auth-story" aria-labelledby="auth-story-title">
     <div className="auth-story-heading"><p className="auth-story-kicker">{tr('A WORKSHOP FOR TEACHERS')}</p><h2 id="auth-story-title">{tr('Turn a school challenge into a useful web app.')}</h2><p>{tr('Before we meet, share one challenge in Pre-work.')}</p></div>
-    <button type="button" className="auth-watch-guide" onClick={onWatchGuide}><span className="auth-watch-guide-play" aria-hidden="true">▶</span><span className="auth-watch-guide-copy"><strong>{tr('Watch the workshop guide')}</strong><small>{tr('English voice and captions')}</small></span><WorkshopIcon name="arrow"/></button>
+    <button type="button" className="auth-watch-guide" onClick={onWatchGuide}><span className="auth-watch-guide-preview" aria-hidden="true"><span className="auth-watch-guide-play">▶</span><span className="auth-watch-guide-duration">2 MIN</span></span><span className="auth-watch-guide-copy"><span className="auth-watch-guide-label">{tr('START HERE')}</span><strong>{tr('Watch the workshop guide')}</strong><small>{tr('English voice and captions')}</small></span><span className="auth-watch-guide-arrow" aria-hidden="true"><WorkshopIcon name="arrow"/></span></button>
     <div className="auth-story-task"><div><strong>{tr('Ready to begin?')}</strong><p>{tr('Sign up with your real name, then publish your Pre-work.')}</p></div><button type="button" onClick={onSignup}>{tr('Get started')} <span aria-hidden="true">→</span></button></div>
   </aside>;
 }

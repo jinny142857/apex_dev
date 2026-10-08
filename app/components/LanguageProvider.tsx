@@ -43,6 +43,7 @@ const translations: Record<string, string> = {
   'Get started': '가입하기',
   'Before we meet, share one challenge in Pre-work.': '연수 전에 사전 과제로 학교의 문제 한 가지를 공유하세요.',
   'Watch the workshop guide': '연수 가이드 영상 보기',
+  'START HERE': '여기부터 시작',
   'English voice and captions': '영어 음성·자막',
   'Ready to begin?': '시작할 준비가 되셨나요?',
   'Sign up with your real name, then publish your Pre-work.': '실명으로 가입한 뒤 사전 과제 글을 게시하세요.',
