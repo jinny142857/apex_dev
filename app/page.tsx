@@ -43,6 +43,9 @@ export default function Home() {
   const [pageMode, setPageMode] = useState<'board' | 'editor'>('board');
   const [login, setLogin] = useState({ identifier: '', password: '' });
   const [signup, setSignup] = useState({ nickname: '', email: '', password: '' });
+  const [signupComplete, setSignupComplete] = useState(false);
+  const [signupSlow, setSignupSlow] = useState(false);
+  const [signupSignInError, setSignupSignInError] = useState(false);
   const [authMode, setAuthMode] = useState<'signin' | 'signup' | 'reset'>('signin');
   const [showPassword, setShowPassword] = useState(false);
   const [resetEmail, setResetEmail] = useState('');
@@ -153,15 +156,41 @@ export default function Home() {
   }
 
   async function register(event: React.FormEvent) {
-    event.preventDefault(); setMessage(''); setBusy(true);
+    event.preventDefault();
+    if (busy) return;
+    setMessage('');
+    setSignupSlow(false);
+    setBusy(true);
+    const slowTimer = window.setTimeout(() => setSignupSlow(true), 7000);
     try {
-      const response = await fetch('/api/register', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(signup) });
+      const response = await fetch('/api/register', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(signup), signal: AbortSignal.timeout(30000) });
       const result = await response.json();
       if (!response.ok) throw new Error(result.error || 'Could not create account.');
+      setSignupComplete(true);
+    } catch (error) {
+      const timedOut = error instanceof Error && (error.name === 'TimeoutError' || error.name === 'AbortError');
+      setMessage(timedOut ? 'We could not confirm your account. Please wait a moment and try signing in before submitting again.' : error instanceof Error ? error.message : 'Could not create account. Please try again.');
+    }
+    finally { window.clearTimeout(slowTimer); setSignupSlow(false); setBusy(false); }
+  }
+  async function continueAfterSignup() {
+    if (busy) return;
+    setBusy(true);
+    setSignupSignInError(false);
+    try {
       await signInWithEmailAndPassword(clientAuth(), signup.email, signup.password);
-      setMessage('Account created. Keep your password private.');
-    } catch (error) { setMessage(error instanceof Error ? error.message : 'Could not create account.'); }
-    finally { setBusy(false); }
+      setSignupComplete(false);
+      setSignup(previous => ({ ...previous, password: '' }));
+    } catch {
+      setSignupSignInError(true);
+    } finally { setBusy(false); }
+  }
+  function closeSignupComplete() {
+    setSignupComplete(false);
+    setSignupSignInError(false);
+    setSignup(previous => ({ ...previous, password: '' }));
+    setLogin(previous => ({ ...previous, identifier: signup.nickname }));
+    setAuthMode('signin');
   }
   async function signIn(event: React.FormEvent) {
     event.preventDefault(); setMessage(''); setBusy(true);
@@ -343,10 +372,18 @@ export default function Home() {
     <section className="auth-main"><div className="auth-heading"><p className="eyebrow">{tr("YOUR WORKSHOP SPACE")}</p><h1>{authMode === 'signin' ? tr('Welcome back') : authMode === 'signup' ? tr('Create your account') : tr('Reset your password')}</h1><p>{authMode === 'signin' ? tr('Sign in to continue your work and explore ideas from the group.') : authMode === 'signup' ? tr('Use your real name as your nickname so others can recognize you. Your work will be shared when you publish it.') : tr('Enter the email you used when creating your account.')}</p></div>
       <div className="auth-card">
         {authMode === 'signin' && <form onSubmit={signIn}><label htmlFor="login-nickname">{tr("Nickname")}</label><input id="login-nickname" autoComplete="username" required placeholder={tr("Your nickname")} value={login.identifier} onChange={e => setLogin({ ...login, identifier: e.target.value })}/><label htmlFor="login-password">{tr("Password")}</label><div className="password-field"><input id="login-password" autoComplete="current-password" required type={showPassword ? 'text' : 'password'} placeholder={tr("Your password")} value={login.password} onChange={e => setLogin({ ...login, password: e.target.value })}/><button type="button" className="show-password" onClick={() => setShowPassword(!showPassword)} aria-label={showPassword ? tr('Hide password') : tr('Show password')}>{tr(showPassword ? 'Hide' : 'Show')}</button></div><button className="auth-submit" disabled={busy}>{tr("Sign in")}</button><div className="auth-links"><span>{tr("New to APEX DEV?")} <button type="button" className="inline-link" onClick={() => { setAuthMode('signup'); setMessage(''); }}>{tr("Create an account")}</button></span><button type="button" className="inline-link" onClick={() => { setAuthMode('reset'); setMessage(''); }}>{tr("Forgot password?")}</button></div></form>}
-        {authMode === 'signup' && <form onSubmit={register}><label htmlFor="signup-nickname">{tr("Real name (nickname)")}</label><input id="signup-nickname" autoComplete="username" required placeholder={tr("Your real name")} value={signup.nickname} onChange={e => setSignup({ ...signup, nickname: e.target.value })}/><label htmlFor="signup-email">{tr("Email")}</label><input id="signup-email" autoComplete="email" required type="email" placeholder="name@gmail.com" value={signup.email} onChange={e => setSignup({ ...signup, email: e.target.value })}/><label htmlFor="signup-password">{tr("Password")}</label><div className="password-field"><input id="signup-password" autoComplete="new-password" required minLength={8} type={showPassword ? 'text' : 'password'} placeholder={tr("At least 8 characters")} value={signup.password} onChange={e => setSignup({ ...signup, password: e.target.value })}/><button type="button" className="show-password" onClick={() => setShowPassword(!showPassword)} aria-label={showPassword ? tr('Hide password') : tr('Show password')}>{tr(showPassword ? 'Hide' : 'Show')}</button></div><p className="auth-help">{tr("We use your email for account recovery and workshop communication. Please do not enter student names or sensitive school information.")}</p><button className="auth-submit" disabled={busy}>{tr("Create account")}</button><div className="auth-links"><span>{tr("Already have an account?")} <button type="button" className="inline-link" onClick={() => { setAuthMode('signin'); setMessage(''); }}>{tr("Sign in")}</button></span></div></form>}
+        {authMode === 'signup' && <form onSubmit={register}><label htmlFor="signup-nickname">{tr("Real name (nickname)")}</label><input id="signup-nickname" autoComplete="username" required placeholder={tr("Your real name")} value={signup.nickname} onChange={e => setSignup({ ...signup, nickname: e.target.value })}/><label htmlFor="signup-email">{tr("Email")}</label><input id="signup-email" autoComplete="email" required type="email" placeholder="name@gmail.com" value={signup.email} onChange={e => setSignup({ ...signup, email: e.target.value })}/><label htmlFor="signup-password">{tr("Password")}</label><div className="password-field"><input id="signup-password" autoComplete="new-password" required minLength={8} type={showPassword ? 'text' : 'password'} placeholder={tr("At least 8 characters")} value={signup.password} onChange={e => setSignup({ ...signup, password: e.target.value })}/><button type="button" className="show-password" onClick={() => setShowPassword(!showPassword)} aria-label={showPassword ? tr('Hide password') : tr('Show password')}>{tr(showPassword ? 'Hide' : 'Show')}</button></div><p className="auth-help">{tr("We use your email for account recovery and workshop communication. Please do not enter student names or sensitive school information.")}</p><button className="auth-submit" disabled={busy}>{busy ? tr("Creating account…") : tr("Create account")}</button>{busy && <p className="signup-progress" role="status">{tr(signupSlow ? "Still creating your account. Please keep this page open." : "Creating your account…")}</p>}{message && <p className="signup-form-error" role="alert">{tr(message)}</p>}<div className="auth-links"><span>{tr("Already have an account?")} <button type="button" className="inline-link" onClick={() => { setAuthMode('signin'); setMessage(''); }}>{tr("Sign in")}</button></span></div></form>}
         {authMode === 'reset' && <form onSubmit={resetPassword}><label htmlFor="reset-email">{tr("Email")}</label><input id="reset-email" autoComplete="email" required type="email" placeholder="name@gmail.com" value={resetEmail} onChange={e => setResetEmail(e.target.value)}/><button className="auth-submit" disabled={busy}>{tr("Send reset link")}</button><div className="auth-links"><button type="button" className="inline-link" onClick={() => { setAuthMode('signin'); setMessage(''); }}>{tr("Back to sign in")}</button></div></form>}
-      </div><button type="button" className="demo-preview-link" onClick={() => { setDemoOpen(true); setDemoError(''); setDemoPassword(''); }}>{tr('Demo mode')} →</button>{message && <p role="status" className="auth-message">{message}</p>}
+      </div><button type="button" className="demo-preview-link" onClick={() => { setDemoOpen(true); setDemoError(''); setDemoPassword(''); }}>{tr('Demo mode')} →</button>{message && authMode !== 'signup' && <p role="status" className="auth-message">{message}</p>}
     </section>
+    {signupComplete && <div className="preview-modal-backdrop"><div className="signup-success-dialog" role="dialog" aria-modal="true" aria-labelledby="signup-success-title" aria-describedby="signup-success-description">
+      <span className="signup-success-icon" aria-hidden="true">✓</span>
+      <h2 id="signup-success-title">{tr('Your account is ready!')}</h2>
+      <p id="signup-success-description">{tr('Your account has been created. Continue to enter your workshop space.')}</p>
+      <button type="button" className="auth-submit" autoFocus disabled={busy} onClick={() => void continueAfterSignup()}>{busy ? tr('Signing you in…') : tr('Continue to workshop')} →</button>
+      {signupSignInError && <p className="signup-success-error" role="alert">{tr('Your account was created, but automatic sign-in failed. Please sign in with your nickname and password.')}</p>}
+      <button type="button" className="signup-success-secondary" disabled={busy} onClick={closeSignupComplete}>{tr('Sign in manually')}</button>
+    </div></div>}
     {demoOpen && <div className="preview-modal-backdrop" onClick={() => setDemoOpen(false)}><form className="demo-gate" role="dialog" aria-modal="true" aria-label={tr('Enter demo password')} onClick={event => event.stopPropagation()} onSubmit={enterDemo}><button className="preview-close" type="button" onClick={() => setDemoOpen(false)} aria-label="Close">×</button><div className="demo-gate-icon">✦</div><h2>{tr('Demo mode')}</h2><label htmlFor="demo-password">{tr('Enter demo password')}</label><input id="demo-password" type="password" inputMode="numeric" autoComplete="off" autoFocus value={demoPassword} onChange={event => { setDemoPassword(event.target.value); setDemoError(''); }} placeholder="••••"/>{demoError && <p className="demo-gate-error" role="alert">{demoError}</p>}<button type="submit">{tr('Enter preview')} →</button></form></div>}
   </main>;
 

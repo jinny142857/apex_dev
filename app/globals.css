@@ -69,6 +69,15 @@ a{color:var(--blue)}
 .auth-links .inline-link{font-size:.79rem}
 .auth-help{margin:13px 0 0;color:var(--muted);font-size:.76rem;line-height:1.6}
 .auth-message{margin:17px 0;padding:13px 16px;border:1px solid #c5daeb;border-radius:9px;background:#eef6fc;color:#245477;text-align:center;font-size:.87rem}
+.signup-progress{margin:12px 0 0;color:#41627e;text-align:center;font-size:.82rem;line-height:1.5}
+.signup-form-error{margin:13px 0 0;padding:11px 13px;border:1px solid #e8c5c6;border-radius:9px;background:#fff4f3;color:#a33642;font-size:.8rem;line-height:1.5}
+.signup-success-dialog{width:min(430px,100%);padding:34px;border:1px solid #d8e7ed;border-radius:22px;background:#fffefa;box-shadow:0 28px 85px #092d5050;text-align:center}
+.signup-success-icon{display:grid;place-items:center;width:54px;height:54px;margin:0 auto 16px;border-radius:17px;background:#e3f5e9;color:#238357;font-size:1.75rem;font-weight:800}
+.signup-success-dialog h2{margin:0 0 10px;font-size:1.7rem;letter-spacing:-.045em}
+.signup-success-dialog>p{margin:0;color:var(--muted);font-size:.88rem;line-height:1.6}
+.signup-success-dialog .auth-submit{margin-top:24px}
+.signup-success-dialog .signup-success-error{margin-top:14px;color:#aa3540}
+.signup-success-secondary{margin-top:12px;padding:8px 12px;background:transparent;color:var(--blue);font-size:.82rem}
 .topbar{border-bottom:1px solid var(--line);background:#fffdf9}
 .topbar-inner{display:flex;align-items:center;justify-content:space-between;gap:15px;max-width:1260px;margin:auto;padding:14px 28px}
 .brand,.account{display:flex;align-items:center;gap:12px}
