@@ -52,6 +52,36 @@ a{color:var(--blue)}
 .auth-card{position:relative;z-index:1}
 .auth-header{display:flex;align-items:center;gap:12px;max-width:1120px;margin:auto;padding:29px 30px}
 .auth-header strong{font-size:1.28rem;font-weight:800;letter-spacing:-.04em}
+.auth-entry-layout{display:grid;grid-template-columns:minmax(0,1fr) minmax(390px,500px);align-items:center;gap:clamp(32px,5vw,72px);max-width:1120px;margin:20px auto 75px;padding:0 30px}
+.auth-entry-layout .auth-main,.auth-entry-layout .auth-main-signup{width:100%;margin:0}
+.auth-story{position:relative;overflow:hidden;padding:34px;border:1px solid #e7dfd6;border-radius:26px;background:linear-gradient(145deg,#fffefa,#fff1df 65%,#edf0ff);box-shadow:0 18px 45px #5b4a3410}
+.auth-story::after{content:'✦';position:absolute;top:-26px;right:8px;color:#f0c3956b;font-size:8rem;line-height:1;pointer-events:none}
+.auth-story-heading,.auth-story-steps,.auth-story-task,.auth-watch-guide{position:relative;z-index:1}
+.auth-story-kicker{margin:0;color:#a06452;font-size:.72rem;font-weight:900;letter-spacing:.13em}
+.auth-story-heading h2{max-width:490px;margin:14px 0 12px;color:#2f3d61;font-size:clamp(2.25rem,3.2vw,3.55rem);line-height:1.12;letter-spacing:-.065em}
+.auth-story-heading>p:last-child{max-width:450px;margin:0;color:#58667b;font-size:.95rem;line-height:1.65}
+.auth-story-steps{display:grid;gap:10px;margin-top:28px}
+.auth-story-step{display:flex;align-items:center;gap:14px;padding:13px 15px;border:1px solid #eadfd5;border-radius:15px;background:#fffcfae8;box-shadow:0 5px 15px #5b4a3409}
+.auth-story-step-icon{display:grid;place-items:center;width:41px;height:41px;flex:none;border-radius:12px;background:#e9edff;color:#5266a2}
+.auth-story-step:nth-child(2) .auth-story-step-icon{background:#ffe8d9;color:#bc6d50}
+.auth-story-step:nth-child(3) .auth-story-step-icon{background:#e2f1e9;color:#46846a}
+.auth-story-step-icon svg{width:22px;height:22px}
+.auth-story-step small{display:block;color:#a47768;font-size:.65rem;font-weight:900;letter-spacing:.12em}
+.auth-story-step strong{display:block;color:#2f3d61;font-size:.88rem;line-height:1.3}
+.auth-story-step p{margin:2px 0 0;color:#697387;font-size:.73rem;line-height:1.4}
+.auth-story-task{display:flex;align-items:center;gap:11px;margin-top:20px;padding:15px 17px;border-radius:14px;background:#fff8ed;color:#594563}
+.auth-story-task>span{color:#c77b53;font-size:1.25rem;line-height:1}
+.auth-story-task>div{flex:1}
+.auth-story-task strong{font-size:.82rem}
+.auth-story-task p{margin:3px 0 0;font-size:.78rem;line-height:1.45}
+.auth-story-task button{flex:none;padding:10px 13px;border-radius:11px;background:#5065a0;color:white;font-size:.77rem;font-weight:800;box-shadow:0 3px 0 #344779}
+.auth-watch-guide{display:flex;align-items:center;gap:8px;margin:14px 0 0;padding:4px 0;border:0;background:transparent;color:#455f9c;font-size:.82rem;font-weight:800;box-shadow:none}
+.auth-watch-guide:hover{color:#203f82;text-decoration:underline}
+.auth-watch-guide span{display:grid;place-items:center;width:25px;height:25px;border-radius:50%;background:#e5ebfa;font-size:.58rem}
+.auth-video-dialog{position:relative;width:min(920px,100%);max-height:92vh;overflow:auto;padding:24px;border-radius:20px;background:#fffefa;box-shadow:0 25px 90px #081b3760}
+.auth-video-dialog h2{margin:0 42px 18px 0;font-size:1.35rem;letter-spacing:-.04em}
+.auth-video-dialog video{display:block;width:100%;aspect-ratio:16/9;border-radius:12px;background:#263653}
+.auth-video-close{position:absolute;top:16px;right:17px;width:34px;height:34px;padding:0;border-radius:50%;background:#edf2f8;color:#43516a;font-size:1.4rem;line-height:1}
 .auth-main{width:min(100% - 32px,520px);margin:32px auto 70px}
 .auth-heading{text-align:center}
 .auth-heading h1{margin:9px 0 6px;font-size:clamp(2rem,3.6vw,2.65rem);line-height:1.15;letter-spacing:-.06em}
@@ -75,6 +105,8 @@ a{color:var(--blue)}
 .auth-signup-cta:hover{border-color:#6aa9d2;background:#e7f4fc}
 .auth-signup-cta span{font-size:1.2rem}
 .auth-links-end{justify-content:flex-end;margin-top:11px}
+@media(max-width:860px){.auth-entry-layout{grid-template-columns:1fr;gap:18px;max-width:590px;margin:8px auto 65px;padding:0 16px}.auth-story{padding:20px}.auth-story-heading h2{margin:8px 0;font-size:1.8rem}.auth-story-heading>p:last-child{display:none}.auth-story-steps{grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;margin-top:14px}.auth-story-step{align-items:flex-start;flex-direction:column;gap:6px;padding:9px}.auth-story-step p{display:none}.auth-story-step strong{font-size:.7rem}.auth-story-step-icon{width:30px;height:30px;border-radius:9px}.auth-story-step-icon svg{width:17px;height:17px}.auth-story-task{margin-top:9px;padding:10px 12px}.auth-story-task p{margin-top:1px}}
+@media(max-width:460px){.auth-story-heading h2{font-size:1.55rem}.auth-story-step strong{font-size:.66rem}.auth-story-task{flex-wrap:wrap}.auth-story-task>div{flex-basis:calc(100% - 35px)}.auth-story-task button{margin-left:auto}.auth-story-task strong{font-size:.75rem}.auth-story-task p{font-size:.68rem}}
 .auth-links{display:flex;align-items:center;justify-content:space-between;gap:5px;flex-wrap:wrap;margin-top:20px;color:var(--muted);font-size:.78rem}
 .auth-links .inline-link{font-size:.79rem}
 .auth-help{margin:13px 0 0;color:var(--muted);font-size:.76rem;line-height:1.6}
@@ -168,6 +200,7 @@ a{color:var(--blue)}
 .example-sentence{margin:0;font-size:.92rem;font-weight:600;line-height:2;color:#2b3b4c}
 .example-compare{margin:10px 0 0;color:var(--muted);font-size:.78rem;font-style:italic}
 .statement-column .prework-preview,.preview-task-response .prework-preview{min-height:90px;margin-top:10px;background:#f3f9fd;color:#254866;line-height:1.65}
+.prework-entry-help{max-width:630px;margin:10px 0 20px;color:#62758c;font-size:.93rem;line-height:1.55}
 .guide-dialog{width:min(720px,calc(100vw - 32px));max-height:min(820px,calc(100dvh - 40px));padding:0;border:1px solid #ccdeec;border-radius:17px;background:#fff;color:var(--ink);box-shadow:0 28px 80px #122c4b38}
 .guide-dialog::backdrop{background:#10243fb3;backdrop-filter:blur(4px)}
 .guide-dialog-header{display:flex;align-items:flex-start;justify-content:space-between;gap:20px;padding:26px 30px 18px;border-bottom:1px solid var(--line)}
