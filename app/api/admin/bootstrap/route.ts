@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { adminAuth, adminDb } from '@/lib/firebase-admin';
-import { preworkExampleStatement } from '@/lib/prework-example';
+import { preworkExampleStatements } from '@/lib/prework-example';
 export async function POST(request: NextRequest) {
   if (request.headers.get('x-setup-secret') !== process.env.ADMIN_SETUP_SECRET) return NextResponse.json({ error: 'Invalid setup secret' }, { status: 401 });
   const email = process.env.ADMIN_EMAIL!, password = process.env.ADMIN_PASSWORD!, nickname = process.env.ADMIN_NICKNAME!;
@@ -31,7 +31,17 @@ export async function POST(request: NextRequest) {
       ],
     });
   }
-  const examplePost = adminDb().collection('prework').doc('example-admin');
-  await examplePost.set({ ownerId: user.uid, ownerName: nickname, text: preworkExampleStatement, isPublic: true, isExample: true, isArchived: false, updatedAt: new Date() }, { merge: true });
+  const prework = adminDb().collection('prework');
+  const exampleIds = ['example-admin', 'example-student-support'];
+  const oldExamples = await prework.where('isExample', '==', true).get();
+  const batch = adminDb().batch();
+  oldExamples.docs.forEach(post => {
+    if (!exampleIds.includes(post.id)) batch.set(post.ref, { isPublic: false, isArchived: true, archivedAt: new Date(), archivedBy: user.uid, updatedAt: new Date() }, { merge: true });
+  });
+  preworkExampleStatements.forEach((text, index) => {
+    const post = prework.doc(exampleIds[index]);
+    batch.set(post, { ownerId: user.uid, ownerName: nickname, text, isPublic: true, isExample: true, isArchived: false, archivedAt: null, archivedBy: null, updatedAt: new Date() }, { merge: true });
+  });
+  await batch.commit();
   return NextResponse.json({ ok: true, message: 'Administrator is ready.' });
 }

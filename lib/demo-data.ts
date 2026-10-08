@@ -1,5 +1,5 @@
 import type { OutcomePost } from '@/app/components/OutcomeShowcase';
-import { preworkExampleStatement } from '@/lib/prework-example';
+import { preworkExampleStatements } from '@/lib/prework-example';
 
 export const demoPeople = [
   ['Alex', 'A'], ['Mina', 'A'], ['Sam', 'A'], ['June', 'A'],
@@ -26,20 +26,23 @@ export const demoWorks = [
   ['Idea Notebook', 'Capture, revisit, and connect classroom ideas.', 'Good ideas are lost between workshop sessions.'],
 ] as const;
 
-export function makeDemoOutcomes(origin: string): OutcomePost[] {
-  const featured = [0, 4, 8, 12] as const;
-  const projectIds = [0, 3, 4, 5] as const;
-  return featured.map((personIndex, index) => {
+export function makeDemoOutcomes(): OutcomePost[] {
+  const featured = [
+    { personIndex: 0, name: '별빛 카페', url: 'https://cafecabbage.vercel.app/', features: '수학 문제를 풀고 미션을 해결하며 나만의 카페를 경영하는 게이미피케이션 수학 교육 웹앱입니다.', problem: '수학 학습에 게임의 목표와 보상을 더해 꾸준히 참여할 수 있도록 돕습니다.' },
+    { personIndex: 4, name: '양배추의 여름나기', url: 'https://summer-vacation-seven.vercel.app/', features: '여름방학 과제를 확인하고 방학 동안 친구들과 소통하는 웹앱입니다.', problem: '방학 과제와 친구들의 소식을 한곳에서 확인하고 나눌 수 있습니다.' },
+    { personIndex: 8, name: '모두모아', url: 'https://moa-blush.vercel.app/', features: '모아의 진행에 따라 의견을 나누고 토의 내용을 기록하는 실시간 협력 토의 웹앱입니다.', problem: '모든 참여자가 의견을 나누고 토의 과정을 함께 기록하도록 지원합니다.' },
+    { personIndex: 12, name: '한점한점', url: 'https://mygallery-jet.vercel.app/', features: '학생의 미술 작품을 온라인 전시 공간에서 공유하는 웹앱입니다.', problem: '학생 작품을 한곳에 전시하고 서로 감상할 수 있는 공간을 제공합니다.' },
+  ] as const;
+  return featured.map(({ personIndex, ...work }, index) => {
     const [name] = demoPeople[personIndex];
-    const work = demoWorks[personIndex];
     return {
     id: `sample-outcome-${index + 1}`,
     ownerId: `sample-user-${personIndex + 1}`,
     ownerName: name,
-    name: work[0],
-    url: origin ? `${origin}/preview/project/${projectIds[index]}` : '',
-    problem: work[2],
-    features: work[1],
+    name: work.name,
+    url: work.url,
+    problem: work.problem,
+    features: work.features,
     guide: 'Explore the working prototype, then share one concrete idea to make it more useful in a real classroom.',
     demoComments: [
       { id: `sample-comment-${index}-1`, text: 'The first screen makes the purpose easy to understand.', authorName: 'Mina', authorId: 'sample-user-2' },
@@ -49,12 +52,12 @@ export function makeDemoOutcomes(origin: string): OutcomePost[] {
   }; });
 }
 
-export const demoPrework = [
-  { id: 'sample-pre-1', ownerName: 'admin', text: preworkExampleStatement, isExample: true },
-  { id: 'sample-pre-2', ownerName: 'Alex', text: '[Grade 5 teachers] struggle to [hear from every student] during [whole-class discussions] because [a few confident voices often take most of the time].' },
-  { id: 'sample-pre-3', ownerName: 'Mina', text: '[Students learning fractions] struggle to [compare different fractions] when [they only see written symbols] because [the relative size is hard to picture].' },
-  { id: 'sample-pre-4', ownerName: 'Taylor', text: '[Homeroom teachers] struggle to [summarize weekly updates for families] when [news comes from several channels] because [there is no single place to collect it].' },
-];
+export const demoPrework = preworkExampleStatements.map((text, index) => ({
+  id: `sample-pre-${index + 1}`,
+  ownerName: 'admin',
+  text,
+  isExample: true,
+}));
 
 export const demoPractice = [
   { id: 'sample-practice-1', ownerName: 'Alex', name: 'My first AI-made quiz', url: '/preview/project/1', guide: 'I followed the example and changed the question style for my class.' },

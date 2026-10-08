@@ -6,7 +6,7 @@ This workshop is about building a web app — through vibe coding — that helps
 
 ## What each part means
 
-- **WHO** — the person or group affected. Be specific ("new homeroom teachers," not "teachers").
+- **WHO** — the person or group affected. Be specific ("teachers who share school spaces and equipment," not "teachers").
 - **TASK** — the specific thing they are trying to do.
 - **SITUATION** — when or where it happens.
 - **ROOT CAUSE** — why it keeps happening. A cause, not a solution.
