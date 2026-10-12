@@ -66,6 +66,6 @@ export const demoPractice = [
 ];
 
 export const demoPrd = [
-  { id: 'sample-prd-1', ownerName: 'Alex', problem: 'A few voices dominate classroom discussion.', user: 'Classroom teachers', goal: 'See participation patterns and invite quieter students in.', features: 'Tap to record a contribution; review a simple weekly view.' },
-  { id: 'sample-prd-2', ownerName: 'Mina', problem: 'Fractions are difficult to compare visually.', user: 'Upper elementary students', goal: 'Explore equivalent fractions through visual models.', features: 'Interactive fraction bars and short practice prompts.' },
+  { id: 'sample-prd-1', ownerName: 'Alex', problem: 'A few voices dominate classroom discussion.', user: 'Classroom teachers', goal: 'Teachers can notice participation imbalances and invite more students into discussion.', appIdea: 'A web app that helps teachers record and review who has contributed.', features: 'Record a contribution\nView a simple participation summary' },
+  { id: 'sample-prd-2', ownerName: 'Mina', problem: 'Fractions are difficult to compare visually.', user: 'Upper elementary students', goal: 'Students can compare equivalent fractions more confidently.', appIdea: 'A web app that lets students explore fractions with visual bars.', features: 'Adjust fraction bars\nCompare two fractions\nTry a short practice question' },
 ];

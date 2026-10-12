@@ -9,6 +9,8 @@ import PreworkExample from '@/app/components/PreworkExample';
 import { splitPreworkGuide } from '@/lib/prework-example';
 import WorkshopIcon from '@/app/components/WorkshopIcon';
 import SiteFooter from '@/app/components/SiteFooter';
+import ProblemPrdWizard, { type AssistContext } from '@/app/components/ProblemPrdWizard';
+import { buildPrdMarkdown, emptyPrd, stripProblemBrackets, type Prd } from '@/lib/prd';
 import { LanguageSwitch, useLanguage } from '@/app/components/LanguageProvider';
 import { clientAuth, clientDb } from '@/lib/firebase';
 import { onAuthStateChanged, sendPasswordResetEmail, signInWithCustomToken, signInWithEmailAndPassword, signOut, type User } from 'firebase/auth';
@@ -17,11 +19,9 @@ import { addDoc, collection, doc, getDoc, getDocs, onSnapshot, query, serverTime
 type Stage = 'prework' | 'practice' | 'prd' | 'share';
 type View = Stage | 'home' | 'evaluation' | 'admin';
 type Settings = Record<Stage | 'evaluation', boolean>;
-type Prd = { problem: string; user: string; goal: string; features: string; design: string };
 type PreworkParts = { who: string; task: string; situation: string; rootCause: string };
-type Post = { id: string; ownerId: string; ownerName?: string; text?: string; problem?: string; user?: string; goal?: string; features?: string; design?: string; name?: string; url?: string; guide?: string; isPublic?: boolean; isExample?: boolean; updatedAt?: { toDate?: () => Date } };
+type Post = { id: string; ownerId: string; ownerName?: string; text?: string; problem?: string; user?: string; goal?: string; features?: string; design?: string; startingProblem?: string; refinedProblem?: string; focusMoment?: string; desiredAction?: string; appIdea?: string; name?: string; url?: string; guide?: string; isPublic?: boolean; isExample?: boolean; updatedAt?: { toDate?: () => Date } };
 const defaults: Settings = { prework: true, practice: false, prd: false, share: false, evaluation: false };
-const emptyPrd: Prd = { problem: '', user: '', goal: '', features: '', design: '' };
 const emptyPreworkParts: PreworkParts = { who: '', task: '', situation: '', rootCause: '' };
 const makeProblemStatement = ({ who, task, situation, rootCause }: PreworkParts) => who || task || situation || rootCause ? `[${who || 'WHO'}] struggle(s) to [${task || 'TASK'}] when [${situation || 'SITUATION'}] because [${rootCause || 'ROOT CAUSE'}].` : '';
 const emptyOutcome = { name: '', url: '', problem: '', features: '', guide: '' };
@@ -101,7 +101,11 @@ export default function Home() {
     if (!user) return;
     const db = clientDb();
     getDoc(doc(db, 'prework', user.uid)).then(s => { const data = s.data(); setPrework(data?.text || ''); setPreworkParts({ who: data?.who || '', task: data?.task || '', situation: data?.situation || '', rootCause: data?.rootCause || '' }); });
-    getDoc(doc(db, 'prds', user.uid)).then(s => setPrd({ ...emptyPrd, ...(s.data() || {}) }));
+    getDoc(doc(db, 'prds', user.uid)).then(s => {
+      let draft: Partial<Prd> = {};
+      try { draft = JSON.parse(localStorage.getItem(`apex-prd-draft-${user.uid}`) || '{}'); } catch { /* Ignore an invalid local draft. */ }
+      setPrd({ ...emptyPrd, ...(s.data() || {}), ...draft });
+    });
     getDocs(query(collection(db, 'projects'), where('ownerId', '==', user.uid))).then(s => {
       const practiceDoc = s.docs.find(d => d.data().stage === 'practice');
       const outcomeDoc = s.docs.find(d => d.data().stage !== 'practice');
@@ -231,12 +235,14 @@ export default function Home() {
     finally { setBusy(false); }
   }
   async function savePrd() {
-    const required: (keyof Prd)[] = ['problem', 'user', 'goal', 'features'];
-    if (!user || !required.every(k => prd[k].trim())) return setMessage('Complete problem, user, goal, and core features before publishing.');
+    const required: (keyof Prd)[] = ['problem', 'user', 'goal', 'appIdea', 'features'];
+    if (!user || !required.every(k => prd[k].trim())) return setMessage('Complete the problem, user, goal, app idea, and core features before publishing.');
     setBusy(true);
     try {
       const target = editing?.stage === 'prd' ? editing.post : null;
-      await setDoc(doc(clientDb(), 'prds', target?.id || user.uid), { ...prd, ownerId: target?.ownerId || user.uid, ownerName: target?.ownerName || name, isPublic: true, isArchived: false, archivedAt: null, archivedBy: null, updatedAt: serverTimestamp() }, { merge: true });
+      const prdFields = Object.fromEntries((Object.keys(emptyPrd) as (keyof Prd)[]).map(key => [key, ['problem', 'startingProblem', 'refinedProblem'].includes(key) ? stripProblemBrackets(prd[key]) : prd[key]]));
+      await setDoc(doc(clientDb(), 'prds', target?.id || user.uid), { ...prdFields, ownerId: target?.ownerId || user.uid, ownerName: target?.ownerName || name, isPublic: true, isArchived: false, archivedAt: null, archivedBy: null, updatedAt: serverTimestamp() }, { merge: true });
+      localStorage.removeItem(`apex-prd-draft-${target?.id || user.uid}`);
       setEditing(null);
       if (target && target.ownerId !== user.uid) setPrd({ ...emptyPrd, ...((await getDoc(doc(clientDb(), 'prds', user.uid))).data() || {}) });
       setMessage('Your problem definition and PRD are published to the group.');
@@ -266,9 +272,23 @@ export default function Home() {
     finally { setBusy(false); }
   }
   function downloadPrd() {
-    const markdown = `# ${name}'s PRD\n\n## Problem\n${prd.problem}\n\n## User\n${prd.user}\n\n## Goal\n${prd.goal}\n\n## Core features\n${prd.features}\n${prd.design.trim() ? `\n## Design requirements\n${prd.design}\n` : ''}`;
+    const markdown = buildPrdMarkdown(prd, prework);
     const url = URL.createObjectURL(new Blob([markdown], { type: 'text/markdown' }));
-    const anchor = document.createElement('a'); anchor.href = url; anchor.download = 'schoollab-prd.md'; anchor.click(); URL.revokeObjectURL(url);
+    const safeName = name.toLowerCase().replace(/[^a-z0-9가-힣_-]+/g, '-').replace(/^-|-$/g, '').slice(0, 36) || 'participant';
+    const anchor = document.createElement('a'); anchor.href = url; anchor.download = `apex-dev-${safeName}-prd.md`; anchor.click(); URL.revokeObjectURL(url);
+  }
+  function savePrdDraft(next: Prd) {
+    if (!user) return false;
+    try { localStorage.setItem(`apex-prd-draft-${editing?.stage === 'prd' ? editing.post.id : user.uid}`, JSON.stringify(next)); return true; }
+    catch { return false; }
+  }
+  async function assistPrd(mode: 'goal' | 'ideas' | 'features', context: AssistContext) {
+    if (!user) throw new Error('Sign in to get AI ideas.');
+    const token = await user.getIdToken();
+    const response = await fetch('/api/prd-ideas', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }, body: JSON.stringify({ mode, ...context }) });
+    const result = await response.json();
+    if (!response.ok) throw new Error(result.error || 'Could not generate ideas. Please try again.');
+    return result;
   }
   async function saveOutcome() {
     if (!user || !outcome.name.trim()) return setMessage('Add a title before publishing.');
@@ -345,7 +365,11 @@ export default function Home() {
     if (stage === 'prework') setPrework(post.text || '');
     if (stage === 'practice') setPractice({ name: post.name || '', url: post.url || '', guide: post.guide || '', id: post.id });
     setPageMode('editor');
-    if (stage === 'prd') setPrd({ problem: post.problem || '', user: post.user || '', goal: post.goal || '', features: post.features || '', design: post.design || '' });
+    if (stage === 'prd') {
+      let draft: Partial<Prd> = {};
+      try { draft = JSON.parse(localStorage.getItem(`apex-prd-draft-${post.id}`) || '{}'); } catch { /* Ignore an invalid local draft. */ }
+      setPrd({ ...emptyPrd, ...post, ...draft });
+    }
     if (stage === 'share') setOutcome({ ...emptyOutcome, ...post, id: post.id });
     setView(stage);
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -404,7 +428,7 @@ export default function Home() {
         {editing?.stage === view && <div className="editing-banner">Editing {editing.post.ownerName || 'participant'}’s post <button className="inline-link" onClick={cancelEdit}>Cancel editing</button></div>}
       {view === 'prework' && pageMode === 'editor' && <section className="editor-panel prework-editor"><div className="panel-heading"><div><p className="eyebrow">YOUR CONTRIBUTION</p><h3>Define a school challenge</h3></div><span className="privacy-pill">Shared with the group</span></div><div className="prework-columns"><aside className="assignment-guide"><div className="column-label">ASSIGNMENT GUIDE</div><div className="markdown"><ReactMarkdown>{splitPreworkGuide(content).intro}</ReactMarkdown></div><PreworkExample/><div className="markdown"><ReactMarkdown>{splitPreworkGuide(content).rest}</ReactMarkdown></div></aside><div className="statement-column"><div className="column-label">BUILD YOUR STATEMENT</div><p className="field-help">Fill in the four boxes below. Your statement will appear automatically in “Your statement,” where you can edit it.</p><div className="prework-parts"><label>WHO <small>Who experiences this?</small><input value={preworkParts.who} onChange={event => updatePreworkPart('who', event.target.value)} placeholder="e.g. Teachers who share school spaces and equipment"/></label><label>TASK <small>What are they trying to do?</small><input value={preworkParts.task} onChange={event => updatePreworkPart('task', event.target.value)} placeholder="e.g. check availability and avoid conflicts"/></label><label>SITUATION <small>When or where does it happen?</small><input value={preworkParts.situation} onChange={event => updatePreworkPart('situation', event.target.value)} placeholder="e.g. when booking rooms for lessons"/></label><label>ROOT CAUSE <small>Why does it keep happening?</small><input value={preworkParts.rootCause} onChange={event => updatePreworkPart('rootCause', event.target.value)} placeholder="e.g. bookings are managed separately"/></label></div><label htmlFor="prework">Your statement</label><textarea id="prework" className="prework-preview" value={prework} onChange={event => setPrework(event.target.value)}/><p className="field-help">Visible to the group once published.</p></div></div><div className="editor-footer"><p>You can update your statement later.</p><button disabled={busy || !Object.values(preworkParts).every(value => value.trim())} onClick={savePrework}>{posts.prework.some(p => p.id === user.uid) || editing?.stage === 'prework' ? 'Update post' : 'Publish post'} <span aria-hidden="true">↗</span></button></div></section>}
         {view === 'practice' && pageMode === 'editor' && <section className="editor-panel"><div className="panel-heading"><div><p className="eyebrow">YOUR CONTRIBUTION</p><h3>Share your warm-up link</h3></div><span className="privacy-pill">Shared with the group</span></div><label htmlFor="practice-url">Result link</label><input id="practice-url" type="url" placeholder="https://..." value={practice.url} onChange={e => setPractice({ ...practice, url: e.target.value })}/><label htmlFor="practice-guide">Note <span className="optional">optional</span></label><input id="practice-guide" placeholder="What did you try or change?" value={practice.guide} onChange={e => setPractice({ ...practice, guide: e.target.value })}/><div className="editor-footer"><p>Paste the link to what you followed along and built.</p><button disabled={busy || !practice.url.trim()} onClick={savePractice}>{practice.id || editing?.stage === 'practice' ? 'Update post' : 'Publish post'} <span aria-hidden="true">↗</span></button></div></section>}
-        {view === 'prd' && pageMode === 'editor' && <section className="editor-panel prd-editor"><div className="panel-heading"><div><p className="eyebrow">YOUR CONTRIBUTION</p><h3>Problem & PRD template</h3><p className="panel-subtitle">Complete the first four parts before publishing. Design requirements are optional.</p></div><span className="privacy-pill">Shared with the group</span></div><div className="context-note"><strong>From your Pre-work</strong><p>{prework || 'Your saved problem statement will appear here.'}</p></div><div className="prd-template-heading"><span>01–05</span><div><strong>Build your plan</strong><p>Keep each response concrete and connected to your original challenge.</p></div></div><div className="prd-template-grid">{([['problem', '01', 'Problem', 'What specific challenge are you trying to address?', false], ['user', '02', 'User', 'Who experiences this problem or will use the solution?', false], ['goal', '03', 'Goal', 'What should the user be able to achieve?', false], ['features', '04', 'Core features', 'What are the one or two essential features?', false], ['design', '05', 'Design requirements', 'Any look, tone, or accessibility needs?', true]] as const).map(([key, number, title, hint, optional]) => <div className="prd-template-field" key={key}><span>{number}</span><label htmlFor={'prd-' + key}>{title} {optional && <span className="optional">optional</span>}</label><textarea id={'prd-' + key} placeholder={hint} value={prd[key]} onChange={e => setPrd({ ...prd, [key]: e.target.value })}/></div>)}</div><div className="editor-footer"><p>Your plan will appear in the shared Problem & PRD board.</p><div className="actions"><button className="secondary" onClick={downloadPrd}>Download .md</button><button disabled={busy || !['problem', 'user', 'goal', 'features'].every(k => prd[k as keyof Prd].trim())} onClick={savePrd}>{posts.prd.some(p => p.id === user.uid) ? 'Update post' : 'Publish post'} <span aria-hidden="true">↗</span></button></div></div></section>}
+        {view === 'prd' && pageMode === 'editor' && <ProblemPrdWizard value={prd} onChange={setPrd} prework={prework} who={preworkParts.who} onSaveDraft={savePrdDraft} onPublish={() => void savePrd()} onDownload={downloadPrd} onAssist={assistPrd} published={posts.prd.some(post => post.id === (editing?.stage === 'prd' ? editing.post.id : user.uid))} busy={busy}/>}
         {view === 'share' && pageMode === 'editor' && <section className="editor-panel"><div className="panel-heading"><div><p className="eyebrow">YOUR CONTRIBUTION</p><h3>Share your outcome</h3></div><span className="privacy-pill">Shared with the group</span></div><div className="form-grid"><div className="field"><label htmlFor="outcome-name">Title</label><input id="outcome-name" placeholder="What did you create?" value={outcome.name} onChange={e => setOutcome({ ...outcome, name: e.target.value })}/></div><div className="field"><label htmlFor="outcome-url">Link <span className="optional">optional</span></label><input id="outcome-url" type="url" placeholder="https://..." value={outcome.url} onChange={e => setOutcome({ ...outcome, url: e.target.value })}/></div><div className="field"><label htmlFor="outcome-problem">Problem addressed</label><textarea id="outcome-problem" placeholder="What challenge does it respond to?" value={outcome.problem} onChange={e => setOutcome({ ...outcome, problem: e.target.value })}/></div><div className="field"><label htmlFor="outcome-features">What it does</label><textarea id="outcome-features" placeholder="Describe the main features or result." value={outcome.features} onChange={e => setOutcome({ ...outcome, features: e.target.value })}/></div></div><label htmlFor="outcome-guide">Introduction or instructions <span className="optional">optional</span></label><textarea id="outcome-guide" placeholder="Anything your peers should know before exploring?" value={outcome.guide} onChange={e => setOutcome({ ...outcome, guide: e.target.value })}/><div className="editor-footer"><p>Projects, resources, documents, and prototypes are all welcome.</p><button disabled={busy} onClick={saveOutcome}>{outcome.id ? 'Update outcome' : 'Publish outcome'} <span aria-hidden="true">↗</span></button></div></section>}
         {pageMode === 'board' && view === 'share' && <OutcomeShowcase posts={stagePosts} currentUser={user} displayName={name} isAdmin={!!isAdmin} onEdit={post => editPost('share', post)} onDelete={post => void removePost('share', post)} onNewPost={() => { setOpenPost(null); setPageMode('editor'); }} teamPick={teamPickInfo && teamPickInfo.phase === 'team' && teamPickInfo.ownTeam ? { team: teamPickInfo.ownTeam, assignments: teamPickInfo.assignments, ownRepresentativeId: teamPickInfo.ownRepresentativeId, busy: teamPickBusy, onPick: postId => void pickRepresentative(postId) } : undefined}/>}
         {pageMode === 'board' && view !== 'share' && <section className="board board-primary"><div className="board-heading"><div><h3>Shared work <span>{stagePosts.length}</span></h3><p>Ideas and progress from the group.</p></div></div><div className="post-grid">{visiblePosts.length ? visiblePosts.map(post => <PostCard key={post.id} stage={active.key} post={post} currentUser={user} isAdmin={isAdmin} expanded={openPost?.stage === active.key && openPost.id === post.id} position={stagePosts.findIndex(entry => entry.id === post.id) + 1} total={stagePosts.length} onToggle={() => setOpenPost(previous => previous?.stage === active.key && previous.id === post.id ? null : { stage: active.key, id: post.id })} onNavigate={direction => { const next = stagePosts[openPostIndex + direction]; if (next) setOpenPost({ stage: active.key, id: next.id }); }} onEdit={editPost} onDelete={removePost}/>) : <div className="empty-state"><span aria-hidden="true">✳</span><h4>No posts yet</h4><p>Be the first to share your work in this step.</p></div>}</div></section>}
@@ -476,7 +500,7 @@ function PostCard({ stage, post, currentUser, isAdmin, expanded, position, total
     {expanded && <nav className="reader-navigation" aria-label="Browse posts"><button className="secondary" disabled={position <= 1} onClick={() => onNavigate(-1)}>← Previous post</button><span>{position} / {total}</span><button className="secondary" disabled={position >= total} onClick={() => onNavigate(1)}>Next post →</button></nav>}
     {expanded ? <div className="post-detail">
       {stage === 'prework' && <p>{post.text}</p>}
-      {stage === 'prd' && <dl>{([['Problem', post.problem], ['User', post.user], ['Goal', post.goal], ['Core features', post.features], ['Design requirements', post.design]] as const).filter(([, value]) => value).map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}</dl>}
+      {stage === 'prd' && <dl>{([['Problem', post.problem || post.refinedProblem], ['User', post.user], ['Goal', post.goal], ['App idea', post.appIdea], ['Core features', post.features], ['Design requirements', post.design]] as const).filter(([, value]) => value).map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{label === 'Problem' ? stripProblemBrackets(value || '') : value}</dd></div>)}</dl>}
       {stage === 'practice' && <><p>{post.guide || 'A warm-up result shared with the group.'}</p>{post.url && <a href={post.url} target="_blank" rel="noopener noreferrer">Open result ↗</a>}</>}
       {stage === 'share' && <><p>{post.problem}</p><p>{post.features}</p><p>{post.guide}</p>{post.url && <a href={post.url} target="_blank" rel="noopener noreferrer">Open external link ↗</a>}</>}
     </div> : <p className="post-excerpt">{excerpt || 'Open this post to explore the details.'}</p>}
