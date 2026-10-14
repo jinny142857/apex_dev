@@ -50,10 +50,10 @@ function PreviewTaskEditor({ kind, content, onPublish, onClose }: { kind: 'prewo
       return result;
     }
     if (mode === 'goal') return { goal: 'Teachers can coordinate shared rooms with fewer messages and booking conflicts.' };
-    if (mode === 'features') return { features: ['View available time slots', 'Reserve a free time slot', 'View or cancel my reservations'] };
+    if (mode === 'features') return { features: ['View sample available time slots', 'Draft a room request', 'Review or print my draft requests'] };
     return { ideas: [
-      { appIdea: 'A simple room booking app that shows availability and lets teachers reserve a time slot.', features: ['View available time slots', 'Reserve a free time slot', 'View or cancel my reservations'] },
-      { appIdea: 'A shared weekly calendar that helps teachers spot room conflicts before planning a lesson.', features: ['See room bookings for the week', 'Flag overlapping requests', 'Choose an open slot'] },
+      { appIdea: 'A web app that helps teachers arrange room requests on their own device.', rationale: 'This makes requests easier to organize before checking the official schedule.', usageMode: 'Teacher use', features: ['View sample available slots', 'Draft a room request', 'Review my draft requests'] },
+      { appIdea: 'A web app that displays a sample weekly room timetable for lesson planning.', rationale: 'This helps staff spot potential conflicts during a planning discussion.', usageMode: 'Teacher-led display', features: ['View the sample timetable', 'Filter by room', 'Mark potential conflicts locally'] },
     ] };
   }
   if (kind === 'prd') return <section className="preview-content preview-task-editor"><ProblemPrdWizard value={prd} onChange={setPrd} prework={demoPrework[0]?.text || ''} who="Teachers who share school spaces and equipment" onSaveDraft={next => { try { localStorage.setItem('apex-demo-prd-draft', JSON.stringify(next)); return true; } catch { return false; } }} onPublish={publish} onDownload={() => { const markdown = buildPrdMarkdown(prd, demoPrework[0]?.text || ''); const url = URL.createObjectURL(new Blob([markdown], { type: 'text/markdown' })); const anchor = document.createElement('a'); anchor.href = url; anchor.download = 'apex-dev-demo-prd.md'; anchor.click(); URL.revokeObjectURL(url); }} onAssist={assistDemo} demoIdeas={process.env.NODE_ENV !== 'development'} published={false}/><div className="preview-editor-actions"><button className="secondary" onClick={onClose}>← Back to posts</button></div></section>;

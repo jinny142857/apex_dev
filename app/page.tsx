@@ -20,7 +20,7 @@ type Stage = 'prework' | 'practice' | 'prd' | 'share';
 type View = Stage | 'home' | 'evaluation' | 'admin';
 type Settings = Record<Stage | 'evaluation', boolean>;
 type PreworkParts = { who: string; task: string; situation: string; rootCause: string };
-type Post = { id: string; ownerId: string; ownerName?: string; text?: string; problem?: string; user?: string; goal?: string; features?: string; design?: string; startingProblem?: string; refinedProblem?: string; focusMoment?: string; desiredAction?: string; appIdea?: string; name?: string; url?: string; guide?: string; isPublic?: boolean; isExample?: boolean; updatedAt?: { toDate?: () => Date } };
+type Post = { id: string; ownerId: string; ownerName?: string; text?: string; problem?: string; user?: string; goal?: string; features?: string; inclusiveDesign?: string; design?: string; startingProblem?: string; refinedProblem?: string; focusMoment?: string; desiredAction?: string; appIdea?: string; name?: string; url?: string; guide?: string; isPublic?: boolean; isExample?: boolean; updatedAt?: { toDate?: () => Date } };
 const defaults: Settings = { prework: true, practice: false, prd: false, share: false, evaluation: false };
 const emptyPreworkParts: PreworkParts = { who: '', task: '', situation: '', rootCause: '' };
 const makeProblemStatement = ({ who, task, situation, rootCause }: PreworkParts) => who || task || situation || rootCause ? `[${who || 'WHO'}] struggle(s) to [${task || 'TASK'}] when [${situation || 'SITUATION'}] because [${rootCause || 'ROOT CAUSE'}].` : '';
@@ -500,7 +500,7 @@ function PostCard({ stage, post, currentUser, isAdmin, expanded, position, total
     {expanded && <nav className="reader-navigation" aria-label="Browse posts"><button className="secondary" disabled={position <= 1} onClick={() => onNavigate(-1)}>← Previous post</button><span>{position} / {total}</span><button className="secondary" disabled={position >= total} onClick={() => onNavigate(1)}>Next post →</button></nav>}
     {expanded ? <div className="post-detail">
       {stage === 'prework' && <p>{post.text}</p>}
-      {stage === 'prd' && <dl>{([['Problem', post.problem || post.refinedProblem], ['User', post.user], ['Goal', post.goal], ['App idea', post.appIdea], ['Core features', post.features], ['Design requirements', post.design]] as const).filter(([, value]) => value).map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{label === 'Problem' ? stripProblemBrackets(value || '') : value}</dd></div>)}</dl>}
+      {stage === 'prd' && <dl>{([['Problem', post.problem || post.refinedProblem], ['User', post.user], ['Goal', post.goal], ['App idea', post.appIdea], ['Core features', post.features], ['Inclusive design', post.inclusiveDesign], ['Design requirements', post.design]] as const).filter(([, value]) => value).map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{label === 'Problem' ? stripProblemBrackets(value || '') : value}</dd></div>)}</dl>}
       {stage === 'practice' && <><p>{post.guide || 'A warm-up result shared with the group.'}</p>{post.url && <a href={post.url} target="_blank" rel="noopener noreferrer">Open result ↗</a>}</>}
       {stage === 'share' && <><p>{post.problem}</p><p>{post.features}</p><p>{post.guide}</p>{post.url && <a href={post.url} target="_blank" rel="noopener noreferrer">Open external link ↗</a>}</>}
     </div> : <p className="post-excerpt">{excerpt || 'Open this post to explore the details.'}</p>}
