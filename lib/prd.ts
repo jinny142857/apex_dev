@@ -26,8 +26,12 @@ export function buildPrdMarkdown(prd: Prd, currentPrework: string) {
 
 ---
 
-Build a small, front-end-only web app based on this PRD. Focus on the stated users and the part of the problem the app can realistically improve. Implement up to three core features first.
+## Build and delivery instructions
 
-Do not require a backend server, remote database, external API or AI API, API key, authentication, or real-time synchronization. If information needs to persist, use browser-local storage on the current device only; do not present it as shared or backed up across devices. Use sample or anonymized data, never real student personal information. Do not assume one device per student: if students use the app, it should also make sense in a computer lab, on a shared group device, or with a teacher-led display. If a requested feature cannot honestly work within these limits, build a smaller working version and clearly state the limitation.
+Build a small, working web app based on this PRD. Focus on the stated users, implement the core features in a usable first version, and state any assumptions or unfinished parts honestly.
+
+The app will be built and deployed as a Google Apps Script web app. Deliver the complete, ready-to-paste source as exactly two named files: \`index.html\` and \`Code.gs\`. In \`Code.gs\`, include \`doGet()\` that returns \`HtmlService.createHtmlOutputFromFile('index')\` for the file named \`index.html\`. Put the UI, styles, and browser-side behavior in the self-contained \`index.html\`; put server-side operations in \`Code.gs\`. Do not require npm, bundling, or additional source files. When the UI needs server data or actions, call Apps Script functions through asynchronous \`google.script.run\` success and failure handlers. Use Google Sheets, PropertiesService, or other Apps Script services only when the PRD needs them, and give brief setup and deployment steps for any required resource or permission. Never put API keys or secrets in \`index.html\`.
+
+Add a visible Privacy Policy link in the app footer. Clicking it must open an accessible modal (dialog label and focus management) with the full policy, a close button, and Escape-key dismissal. Write the policy for the data and services this particular app actually uses: what is collected, why, where it is stored, who can access it, how long it is kept, any third-party services, and how users can make a privacy request. Do not invent an organization, contact address, retention period, or data practice; use a clearly labeled placeholder where an operator decision is still needed. Write the policy in the app’s user-facing language. If the app collects no personal data, say that accurately. Use sample or anonymized information in the prototype and do not include real student personal information.
 `;
 }

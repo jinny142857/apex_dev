@@ -2,7 +2,7 @@
 
 Use this file as the selectable example list for **Your problem**. Show `title` in the selection UI. When a participant chooses an example, load only `problem_statement` into the editable problem field. Participants may keep, revise, replace, or write a completely new problem. Do not load app ideas or proposed features with an example.
 
-Each statement is a complete sentence, ready to import. Its problem is a concrete difficulty observed in school; it does not prescribe a web app as the solution. The examples work as starting points for a small first version, with sample or anonymized data where individual records would be sensitive. A local prototype cannot synchronize records across separate devices.
+Each statement is a complete sentence, ready to import. Its problem is a concrete difficulty observed in school; it does not prescribe a web app as the solution or limit the technology used to build one. The examples work as starting points for a small first version. Use sample or anonymized data where individual records would be sensitive.
 
 ## Examples
 
@@ -89,5 +89,5 @@ Each statement is a complete sentence, ready to import. Its problem is a concret
 ## Facilitator note
 
 - Examples 01–17 and 20 lead naturally to a teacher or staff tool. Examples 18–19 allow supervised student use with shared computers; neither assumes one device per student.
-- When discussing a prototype, use fictional names, sample scores, or anonymous counts. Do not ask participants to enter real student, parent, health, behavior, or consent records into a demo.
+- When discussing a prototype, use fictional names, sample scores, or anonymous counts. Do not ask participants to enter real student, parent, health, behavior, or consent records into a demo. Google Apps Script server functions and shared storage may be used when a participant's app needs them; decide this from the selected problem and app idea rather than restricting the reference problem.
 - The selection UI should display short English titles, then let the participant preview and edit the full sentence. Choosing an example replaces only the problem sentence after a clear confirmation if it would overwrite the participant's own work.

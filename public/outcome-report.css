@@ -1,0 +1,46 @@
+@page{size:A4;margin:18mm 17mm}
+body.standalone-report{margin:0}
+.outcome-report{min-height:100vh;background:#fff;color:#263453;font:14px/1.65 -apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Noto Sans KR",Arial,sans-serif}
+.outcome-report *{box-sizing:border-box}
+.outcome-report .toolbar{position:sticky;top:0;display:flex;align-items:center;justify-content:space-between;gap:16px;padding:14px 24px;background:#253d74;color:#fff}
+.outcome-report .toolbar button{padding:10px 18px;border:0;border-radius:8px;background:#fff;color:#253d74;font:inherit;font-weight:700;cursor:pointer}
+.outcome-report .toolbar button:disabled{opacity:.7;cursor:wait}
+.outcome-report .toolbar-actions{display:flex;gap:10px;flex-wrap:wrap}
+.outcome-report .toolbar small{display:block;color:#d9e2f6;font-size:11px}
+.outcome-report .download-error{max-width:780px;margin:14px auto;color:#a52c40}
+.outcome-report .sheet{max-width:780px;margin:38px auto 64px;padding:0 28px}
+.outcome-report .eyebrow{color:#4d69a3;font-size:11px;font-weight:800;letter-spacing:.14em;text-transform:uppercase}
+.outcome-report h1{margin:7px 0 4px;font-size:31px;line-height:1.25;letter-spacing:-.04em;overflow-wrap:anywhere}
+.outcome-report .meta{margin:0 0 28px;color:#66738d}
+.outcome-report a{color:#28569d}
+.outcome-report h2{margin:0 0 7px;color:#304b87;font-size:15px}
+.outcome-report h3{margin:28px 0 8px;padding-bottom:7px;border-bottom:2px solid #dde8f5;color:#253d74;font-size:19px}
+.outcome-report section{margin:18px 0}
+.outcome-report p{margin:0;white-space:normal;overflow-wrap:anywhere}
+.outcome-report .journey-heading{margin-top:31px}
+.outcome-report .journey-heading>span{color:#637db4;font-size:11px;font-weight:800;letter-spacing:.13em}
+.outcome-report .journey-heading h3{margin:3px 0 20px;padding:0;border:0;font-size:21px}
+.outcome-report .journey{position:relative;margin-left:13px;padding-left:25px;border-left:2px solid #cbd8ee}
+.outcome-report .journey-step{position:relative;display:flex;gap:14px;margin:0 0 18px;padding:19px 20px;border:1px solid #dce5f4;border-radius:13px;background:#fff;box-shadow:0 4px 16px #253d7409}
+.outcome-report .journey-step:last-child{margin-bottom:0}
+.outcome-report .journey-step::before{position:absolute;top:31px;left:-32px;width:10px;height:10px;border:3px solid #5976b2;border-radius:50%;background:#fff;content:''}
+.outcome-report .journey-number{display:grid;place-items:center;width:35px;height:35px;flex:none;border-radius:10px;background:#e9effb;color:#315a9b;font-size:13px;font-weight:800}
+.outcome-report .journey-copy{min-width:0;flex:1}
+.outcome-report .journey-label{color:#667db0;font-size:10px;font-weight:800;letter-spacing:.13em}
+.outcome-report .journey-copy h2{margin:1px 0 9px;color:#263c70;font-size:17px}
+.outcome-report .journey-copy>p{font-size:13px;line-height:1.65}
+.outcome-report .problem-statement{padding:10px 12px;border-radius:8px;background:#f4f7fc}
+.outcome-report .report-field{padding:10px 0;border-top:1px solid #e7edf6;break-inside:avoid}
+.outcome-report .report-field:first-of-type{border-top:0}
+.outcome-report .report-field h3{margin:0 0 4px;padding:0;border:0;color:#536a9e;font-size:11px;font-weight:800;letter-spacing:.05em;text-transform:uppercase}
+.outcome-report .report-field p,.outcome-report .report-field a{font-size:13px;line-height:1.65}
+.outcome-report .report-link a{overflow-wrap:anywhere}
+.outcome-report .empty-prd{padding:12px;border-radius:8px;background:#f4f7fc;color:#66738d}
+.outcome-report .preview-note{margin:0 0 12px!important;color:#66738d;font-size:12px!important}
+.outcome-report .preview-frame{overflow:hidden;height:430px;border:1px solid #dce5f4;border-radius:11px;background:#f4f7fc}
+.outcome-report .preview-frame iframe{display:block;width:100%;height:100%;border:0;background:#fff}
+.outcome-report .self-assessment-report-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px 16px}
+.outcome-report .self-assessment-report-grid>div{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:5px 0;border-bottom:1px solid #e7edf6;font-size:12px}
+.outcome-report .self-assessment-report-grid strong{flex:none;color:#304b87}
+@media(max-width:600px){.outcome-report .toolbar{align-items:flex-start;flex-direction:column}.outcome-report .toolbar-actions{width:100%}.outcome-report .toolbar button{flex:1}.outcome-report .sheet{margin:26px auto 48px;padding:0 16px}.outcome-report .journey{margin-left:5px;padding-left:16px}.outcome-report .journey-step{padding:15px 12px}.outcome-report .journey-step::before{left:-23px}}
+@media print{.outcome-report .toolbar,.outcome-report .download-error,.outcome-report .live-preview,nextjs-portal{display:none!important}.outcome-report .sheet{max-width:none;margin:0;padding:0}.outcome-report .journey-step{break-inside:auto;box-shadow:none;print-color-adjust:exact;-webkit-print-color-adjust:exact}.outcome-report .journey-step::before,.outcome-report .journey-number,.outcome-report .problem-statement{print-color-adjust:exact;-webkit-print-color-adjust:exact}}

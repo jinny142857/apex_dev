@@ -2,8 +2,8 @@
 
 import { useEffect, useRef, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
-import EvaluationPanel from '@/app/components/EvaluationPanel';
 import OutcomeShowcase from '@/app/components/OutcomeShowcase';
+import OutcomeSelfAssessment from '@/app/components/OutcomeSelfAssessment';
 import HomeNotices from '@/app/components/HomeNotices';
 import PreworkExample from '@/app/components/PreworkExample';
 import { splitPreworkGuide } from '@/lib/prework-example';
@@ -11,20 +11,21 @@ import WorkshopIcon from '@/app/components/WorkshopIcon';
 import SiteFooter from '@/app/components/SiteFooter';
 import ProblemPrdWizard, { type AssistContext } from '@/app/components/ProblemPrdWizard';
 import { buildPrdMarkdown, emptyPrd, stripProblemBrackets, type Prd } from '@/lib/prd';
+import { emptySelfAssessment, validSelfAssessment, type OutcomeSelfAssessment as SelfAssessmentScores } from '@/lib/outcome-self-assessment';
 import { LanguageSwitch, useLanguage } from '@/app/components/LanguageProvider';
 import { clientAuth, clientDb } from '@/lib/firebase';
 import { onAuthStateChanged, sendPasswordResetEmail, signInWithCustomToken, signInWithEmailAndPassword, signOut, type User } from 'firebase/auth';
 import { addDoc, collection, doc, getDoc, getDocs, onSnapshot, query, serverTimestamp, setDoc, updateDoc, where } from 'firebase/firestore';
 
 type Stage = 'prework' | 'practice' | 'prd' | 'share';
-type View = Stage | 'home' | 'evaluation' | 'admin';
-type Settings = Record<Stage | 'evaluation', boolean>;
+type View = Stage | 'home' | 'admin';
+type Settings = Record<Stage, boolean>;
 type PreworkParts = { who: string; task: string; situation: string; rootCause: string };
-type Post = { id: string; ownerId: string; ownerName?: string; text?: string; problem?: string; user?: string; goal?: string; features?: string; inclusiveDesign?: string; design?: string; startingProblem?: string; refinedProblem?: string; focusMoment?: string; desiredAction?: string; appIdea?: string; name?: string; url?: string; guide?: string; isPublic?: boolean; isExample?: boolean; updatedAt?: { toDate?: () => Date } };
-const defaults: Settings = { prework: true, practice: false, prd: false, share: false, evaluation: false };
+type Post = { id: string; ownerId: string; ownerName?: string; text?: string; problem?: string; user?: string; goal?: string; features?: string; inclusiveDesign?: string; design?: string; startingProblem?: string; refinedProblem?: string; focusMoment?: string; desiredAction?: string; appIdea?: string; name?: string; url?: string; guide?: string; selfAssessment?: SelfAssessmentScores; isPublic?: boolean; isExample?: boolean; updatedAt?: { toDate?: () => Date } };
+const defaults: Settings = { prework: true, practice: false, prd: false, share: false };
 const emptyPreworkParts: PreworkParts = { who: '', task: '', situation: '', rootCause: '' };
 const makeProblemStatement = ({ who, task, situation, rootCause }: PreworkParts) => who || task || situation || rootCause ? `[${who || 'WHO'}] struggle(s) to [${task || 'TASK'}] when [${situation || 'SITUATION'}] because [${rootCause || 'ROOT CAUSE'}].` : '';
-const emptyOutcome = { name: '', url: '', problem: '', features: '', guide: '' };
+const emptyOutcome = { name: '', url: '', problem: '', features: '', guide: '', selfAssessment: emptySelfAssessment };
 const emptyPractice = { name: '', url: '', guide: '' };
 const stages: { key: Stage; number: string; title: string; short: string; description: string }[] = [
   { key: 'prework', number: '00', title: 'Pre-work', short: 'Pre-work', description: 'Start with a challenge from your school or teaching context.' },
@@ -32,7 +33,6 @@ const stages: { key: Stage; number: string; title: string; short: string; descri
   { key: 'prd', number: '02', title: 'Refine the problem & write a PRD', short: 'Problem & PRD', description: 'Shape your problem into a clear, useful plan.' },
   { key: 'share', number: '03', title: 'Final outcomes', short: 'Final outcomes', description: 'Share your finished work and learn from your peers.' },
 ];
-const evaluationStage = { key: 'evaluation' as const, number: '04', title: 'Presentation & Evaluation', short: 'Present & evaluate', description: 'Share within your team, then evaluate the four final pitches.' };
 const stageIcons: Record<Stage, 'assignment' | 'screen' | 'document' | 'spark'> = { prework: 'assignment', practice: 'screen', prd: 'document', share: 'spark' };
 
 export default function Home() {
@@ -65,8 +65,6 @@ export default function Home() {
   const [adminPosts, setAdminPosts] = useState<Record<Stage, Post[]>>({ prework: [], practice: [], prd: [], share: [] });
   const [editing, setEditing] = useState<{ stage: Stage; post: Post } | null>(null);
   const [busy, setBusy] = useState(false);
-  const [teamPickInfo, setTeamPickInfo] = useState<{ phase: string; ownTeam?: string; assignments: Record<string, string>; ownRepresentativeId?: string } | null>(null);
-  const [teamPickBusy, setTeamPickBusy] = useState(false);
   const [demoOpen, setDemoOpen] = useState(false);
   const [guideVideoOpen, setGuideVideoOpen] = useState(false);
   const [demoPassword, setDemoPassword] = useState('');
@@ -110,7 +108,7 @@ export default function Home() {
       const practiceDoc = s.docs.find(d => d.data().stage === 'practice');
       const outcomeDoc = s.docs.find(d => d.data().stage !== 'practice');
       if (practiceDoc) setPractice({ ...emptyPractice, ...practiceDoc.data(), id: practiceDoc.id });
-      if (outcomeDoc) setOutcome({ ...emptyOutcome, ...outcomeDoc.data(), id: outcomeDoc.id });
+      if (outcomeDoc) setOutcome({ ...emptyOutcome, ...outcomeDoc.data(), selfAssessment: { ...emptySelfAssessment, ...outcomeDoc.data().selfAssessment }, id: outcomeDoc.id });
     });
   }, [user]);
   useEffect(() => {
@@ -124,28 +122,13 @@ export default function Home() {
 
   const isAdmin = profile?.role === 'admin';
   const name = profile?.nickname || user?.displayName || 'Participant';
-  const allowed = (stage: Stage | 'evaluation') => isAdmin || settings[stage];
+  const allowed = (stage: Stage) => isAdmin || settings[stage];
   const active = stages.find(s => s.key === view);
   const stagePosts = active ? posts[active.key] : [];
   const openPostIndex = active && openPost?.stage === active.key ? stagePosts.findIndex(post => post.id === openPost.id) : -1;
   const visiblePosts = openPostIndex < 0 ? stagePosts : [stagePosts[openPostIndex], ...stagePosts.filter((_, index) => index !== openPostIndex)];
   const completed: Record<Stage, boolean> = { prework: !!prework.trim(), practice: !!practice.id, prd: !!prd.problem.trim(), share: !!outcome.id };
 
-  useEffect(() => {
-    if (!user || view !== 'share' || isAdmin) { setTeamPickInfo(null); return; }
-    let cancelled = false;
-    (async () => {
-      try {
-        const token = await user.getIdToken();
-        const response = await fetch('/api/evaluation', { headers: { Authorization: `Bearer ${token}` } });
-        if (!response.ok || cancelled) return;
-        const result = await response.json();
-        const ownTeam = result.config?.assignments?.[user.uid];
-        setTeamPickInfo({ phase: result.config?.phase, ownTeam, assignments: result.config?.assignments || {}, ownRepresentativeId: ownTeam ? result.representatives?.[ownTeam]?.outcomeId : undefined });
-      } catch { /* evaluation may not be open yet; ignore */ }
-    })();
-    return () => { cancelled = true; };
-  }, [user, view, isAdmin]);
 
   async function closeGuide(startWriting = false) {
     setGuideOpen(false);
@@ -293,6 +276,9 @@ export default function Home() {
   async function saveOutcome() {
     if (!user || !outcome.name.trim()) return setMessage('Add a title before publishing.');
     if (outcome.url) { try { const parsed = new URL(outcome.url); if (!['http:', 'https:'].includes(parsed.protocol)) throw new Error(); } catch { return setMessage('Enter a valid http or https link.'); } }
+    if (editing?.post.ownerId === user.uid || !editing) {
+      if (!validSelfAssessment(outcome.selfAssessment)) return setMessage(tr('Enter a whole-number score from 1 to 10 for all five self-check items.'));
+    }
     setBusy(true);
     try {
       const { id, ...fields } = outcome;
@@ -304,26 +290,12 @@ export default function Home() {
       if (target && target.ownerId !== user.uid) {
         const mine = await getDocs(query(collection(clientDb(), 'projects'), where('ownerId', '==', user.uid)));
         const own = mine.docs.find(d => d.data().stage !== 'practice');
-        setOutcome(own ? { ...emptyOutcome, ...own.data(), id: own.id } : { ...emptyOutcome, id: '' });
+        setOutcome(own ? { ...emptyOutcome, ...own.data(), selfAssessment: { ...emptySelfAssessment, ...own.data().selfAssessment }, id: own.id } : { ...emptyOutcome, id: '' });
       }
       setMessage('Your outcome is published to the group.');
       setPageMode('board');
     } catch { setMessage('Could not publish your outcome. Please try again.'); }
     finally { setBusy(false); }
-  }
-  async function pickRepresentative(postId: string) {
-    if (!user) return;
-    if (!window.confirm('Has your team agreed to present this individual outcome?')) return;
-    setTeamPickBusy(true);
-    try {
-      const token = await user.getIdToken();
-      const response = await fetch('/api/evaluation/representative', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }, body: JSON.stringify({ outcomeId: postId }) });
-      const result = await response.json();
-      if (!response.ok) throw new Error(result.error);
-      setTeamPickInfo(previous => previous ? { ...previous, ownRepresentativeId: postId } : previous);
-      setMessage('Your team representative was submitted.');
-    } catch (error) { setMessage(error instanceof Error ? error.message : 'Could not submit the representative.'); }
-    finally { setTeamPickBusy(false); }
   }
   async function removePost(stage: Stage, post: Post) {
     if (!window.confirm('Remove this post from the shared board? It will be retained for recovery.')) return;
@@ -338,7 +310,7 @@ export default function Home() {
     setMessage('Post removed from the shared board. The record is retained for recovery.');
     if (isAdmin) loadAdmin();
   }
-  async function toggle(stage: Stage | 'evaluation') { await setDoc(doc(clientDb(), 'settings', 'site'), { [stage]: !settings[stage] }, { merge: true }); }
+  async function toggle(stage: Stage) { await setDoc(doc(clientDb(), 'settings', 'site'), { [stage]: !settings[stage] }, { merge: true }); }
   async function loadAdmin() {
     if (!user) return;
     const token = await user.getIdToken();
@@ -370,7 +342,7 @@ export default function Home() {
       try { draft = JSON.parse(localStorage.getItem(`apex-prd-draft-${post.id}`) || '{}'); } catch { /* Ignore an invalid local draft. */ }
       setPrd({ ...emptyPrd, ...post, ...draft });
     }
-    if (stage === 'share') setOutcome({ ...emptyOutcome, ...post, id: post.id });
+    if (stage === 'share') setOutcome({ ...emptyOutcome, ...post, selfAssessment: { ...emptySelfAssessment, ...post.selfAssessment }, id: post.id });
     setView(stage);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
@@ -389,7 +361,7 @@ export default function Home() {
     if (stage === 'share') {
       const mine = await getDocs(query(collection(clientDb(), 'projects'), where('ownerId', '==', user.uid)));
       const own = mine.docs.find(d => d.data().stage !== 'practice');
-      setOutcome(own ? { ...emptyOutcome, ...own.data(), id: own.id } : { ...emptyOutcome, id: '' });
+      setOutcome(own ? { ...emptyOutcome, ...own.data(), selfAssessment: { ...emptySelfAssessment, ...own.data().selfAssessment }, id: own.id } : { ...emptyOutcome, id: '' });
     }
   }
 
@@ -419,22 +391,20 @@ export default function Home() {
   return <main className="app-shell">
     <header className="topbar"><div className="topbar-inner"><div className="brand"><BrandMark/><strong>APEX DEV</strong></div><div className="account"><button type="button" className="watch-guide-link" onClick={() => setGuideVideoOpen(true)}><span aria-hidden="true">▶</span> <span className="watch-guide-label">{tr('Watch the workshop guide')}</span></button>{isAdmin && <a className="demo-mode-link" href="/preview?admin=1" onClick={() => localStorage.setItem('apexDevDemoAccess', 'yes')}>✦ {tr('Demo mode')}</a>}<LanguageSwitch/><span className="avatar">{name.slice(0, 1).toUpperCase()}</span><span className="account-name">{name}</span><button className="text-button" onClick={() => signOut(clientAuth())}>{tr('Sign out')}</button></div></div></header>
     <div className="workspace">
-      <nav className="stage-nav" aria-label="Workshop stages"><button className={`stage-tab ${view === 'home' ? 'current' : ''}`} onClick={() => { if (editing) void cancelEdit(); setView('home'); setOpenPost(null); }}>{tr('Home')}</button>{stages.map(s => <button key={s.key} className={`stage-tab stage-${s.key} ${view === s.key ? 'current' : ''} ${allowed(s.key) ? '' : 'locked'}`} onClick={() => { if (editing) void cancelEdit(); setView(s.key); setPageMode('board'); setOpenPost(null); }}><span className="stage-number">{s.number}</span><span>{tr(s.short)}</span>{completed[s.key] && <span className="complete-mark" aria-label="Completed">✓</span>}</button>)}<button className={`stage-tab stage-evaluation ${view === 'evaluation' ? 'current' : ''} ${allowed('evaluation') ? '' : 'locked'}`} onClick={() => { setView('evaluation'); setOpenPost(null); }}><span className="stage-number">04</span>{tr('Present & evaluate')}</button>{isAdmin && <button className={`stage-tab admin-tab ${view === 'admin' ? 'current' : ''}`} onClick={() => { if (editing) void cancelEdit(); setView('admin'); setOpenPost(null); loadAdmin(); }}>{tr('Admin')}</button>}</nav>
+      <nav className="stage-nav" aria-label="Workshop stages"><button className={`stage-tab ${view === 'home' ? 'current' : ''}`} onClick={() => { if (editing) void cancelEdit(); setView('home'); setOpenPost(null); }}>{tr('Home')}</button>{stages.map(s => <button key={s.key} className={`stage-tab stage-${s.key} ${view === s.key ? 'current' : ''} ${allowed(s.key) ? '' : 'locked'}`} onClick={() => { if (editing) void cancelEdit(); setView(s.key); setPageMode('board'); setOpenPost(null); }}><span className="stage-number">{s.number}</span><span>{tr(s.short)}</span>{completed[s.key] && <span className="complete-mark" aria-label="Completed">✓</span>}</button>)}{isAdmin && <button className={`stage-tab admin-tab ${view === 'admin' ? 'current' : ''}`} onClick={() => { if (editing) void cancelEdit(); setView('admin'); setOpenPost(null); loadAdmin(); }}>{tr('Admin')}</button>}</nav>
       {message && <div role="status" className="notice">{message}<button className="notice-close" aria-label="Dismiss message" onClick={() => setMessage('')}>×</button></div>}
       {view === 'home' && <HomeNotices onPrework={() => { setView('prework'); setPageMode('board'); }}/>}
       {active && !allowed(active.key) && <section className="stage-locked"><span className="stage-locked-icon" aria-hidden="true">◇</span><p className="eyebrow">STEP {active.number} / 04</p><h2>{tr(active.title)}</h2><p>{tr("This stage opens on workshop day.")}</p><button className="secondary" onClick={() => setView('home')}>{tr("Back to Home")}</button></section>}
-      {view === 'evaluation' && !allowed('evaluation') && <section className="stage-locked"><span className="stage-locked-icon" aria-hidden="true">◇</span><p className="eyebrow">STEP 04 / 04</p><h2>{tr("Presentation & Evaluation")}</h2><p>{tr("This stage opens on workshop day.")}</p><button className="secondary" onClick={() => setView('home')}>{tr("Back to Home")}</button></section>}
       {active && allowed(active.key) && <><section className={`section-heading stage-heading stage-${active.key}`}><div className="stage-heading-main"><span className="stage-heading-icon"><WorkshopIcon name={stageIcons[active.key]}/></span><div><p className="eyebrow">STEP {active.number} / 04</p><h2>{pageMode === 'editor' ? (view === 'prework' ? tr('Write your Pre-work post') : view === 'practice' ? tr('Share your warm-up') : view === 'prd' ? tr('Write your Problem & PRD post') : tr('Share your final outcome')) : tr(active.title)}</h2><p>{pageMode === 'editor' && view === 'prework' ? tr('Use the guide while you shape your problem statement.') : tr(active.description)}</p></div></div><div className="stage-actions">{view === 'prework' && pageMode === 'board' && <button className="secondary" onClick={() => setGuideOpen(true)}>{tr("Guide")}</button>}<button className={pageMode === 'editor' ? 'secondary' : ''} onClick={() => { if (pageMode === 'editor') { if (editing) void cancelEdit(); else setPageMode('board'); } else { setOpenPost(null); setPageMode('editor'); } }}>{pageMode === 'editor' ? tr('← Back to posts') : tr('+ New post')}</button></div></section>
         {editing?.stage === view && <div className="editing-banner">Editing {editing.post.ownerName || 'participant'}’s post <button className="inline-link" onClick={cancelEdit}>Cancel editing</button></div>}
       {view === 'prework' && pageMode === 'editor' && <section className="editor-panel prework-editor"><div className="panel-heading"><div><p className="eyebrow">YOUR CONTRIBUTION</p><h3>Define a school challenge</h3></div><span className="privacy-pill">Shared with the group</span></div><div className="prework-columns"><aside className="assignment-guide"><div className="column-label">ASSIGNMENT GUIDE</div><div className="markdown"><ReactMarkdown>{splitPreworkGuide(content).intro}</ReactMarkdown></div><PreworkExample/><div className="markdown"><ReactMarkdown>{splitPreworkGuide(content).rest}</ReactMarkdown></div></aside><div className="statement-column"><div className="column-label">BUILD YOUR STATEMENT</div><p className="field-help">Fill in the four boxes below. Your statement will appear automatically in “Your statement,” where you can edit it.</p><div className="prework-parts"><label>WHO <small>Who experiences this?</small><input value={preworkParts.who} onChange={event => updatePreworkPart('who', event.target.value)} placeholder="e.g. Teachers who share school spaces and equipment"/></label><label>TASK <small>What are they trying to do?</small><input value={preworkParts.task} onChange={event => updatePreworkPart('task', event.target.value)} placeholder="e.g. check availability and avoid conflicts"/></label><label>SITUATION <small>When or where does it happen?</small><input value={preworkParts.situation} onChange={event => updatePreworkPart('situation', event.target.value)} placeholder="e.g. when booking rooms for lessons"/></label><label>ROOT CAUSE <small>Why does it keep happening?</small><input value={preworkParts.rootCause} onChange={event => updatePreworkPart('rootCause', event.target.value)} placeholder="e.g. bookings are managed separately"/></label></div><label htmlFor="prework">Your statement</label><textarea id="prework" className="prework-preview" value={prework} onChange={event => setPrework(event.target.value)}/><p className="field-help">Visible to the group once published.</p></div></div><div className="editor-footer"><p>You can update your statement later.</p><button disabled={busy || !Object.values(preworkParts).every(value => value.trim())} onClick={savePrework}>{posts.prework.some(p => p.id === user.uid) || editing?.stage === 'prework' ? 'Update post' : 'Publish post'} <span aria-hidden="true">↗</span></button></div></section>}
         {view === 'practice' && pageMode === 'editor' && <section className="editor-panel"><div className="panel-heading"><div><p className="eyebrow">YOUR CONTRIBUTION</p><h3>Share your warm-up link</h3></div><span className="privacy-pill">Shared with the group</span></div><label htmlFor="practice-url">Result link</label><input id="practice-url" type="url" placeholder="https://..." value={practice.url} onChange={e => setPractice({ ...practice, url: e.target.value })}/><label htmlFor="practice-guide">Note <span className="optional">optional</span></label><input id="practice-guide" placeholder="What did you try or change?" value={practice.guide} onChange={e => setPractice({ ...practice, guide: e.target.value })}/><div className="editor-footer"><p>Paste the link to what you followed along and built.</p><button disabled={busy || !practice.url.trim()} onClick={savePractice}>{practice.id || editing?.stage === 'practice' ? 'Update post' : 'Publish post'} <span aria-hidden="true">↗</span></button></div></section>}
         {view === 'prd' && pageMode === 'editor' && <ProblemPrdWizard value={prd} onChange={setPrd} prework={prework} who={preworkParts.who} onSaveDraft={savePrdDraft} onPublish={() => void savePrd()} onDownload={downloadPrd} onAssist={assistPrd} published={posts.prd.some(post => post.id === (editing?.stage === 'prd' ? editing.post.id : user.uid))} busy={busy}/>}
-        {view === 'share' && pageMode === 'editor' && <section className="editor-panel"><div className="panel-heading"><div><p className="eyebrow">YOUR CONTRIBUTION</p><h3>Share your outcome</h3></div><span className="privacy-pill">Shared with the group</span></div><div className="form-grid"><div className="field"><label htmlFor="outcome-name">Title</label><input id="outcome-name" placeholder="What did you create?" value={outcome.name} onChange={e => setOutcome({ ...outcome, name: e.target.value })}/></div><div className="field"><label htmlFor="outcome-url">Link <span className="optional">optional</span></label><input id="outcome-url" type="url" placeholder="https://..." value={outcome.url} onChange={e => setOutcome({ ...outcome, url: e.target.value })}/></div><div className="field"><label htmlFor="outcome-problem">Problem addressed</label><textarea id="outcome-problem" placeholder="What challenge does it respond to?" value={outcome.problem} onChange={e => setOutcome({ ...outcome, problem: e.target.value })}/></div><div className="field"><label htmlFor="outcome-features">What it does</label><textarea id="outcome-features" placeholder="Describe the main features or result." value={outcome.features} onChange={e => setOutcome({ ...outcome, features: e.target.value })}/></div></div><label htmlFor="outcome-guide">Introduction or instructions <span className="optional">optional</span></label><textarea id="outcome-guide" placeholder="Anything your peers should know before exploring?" value={outcome.guide} onChange={e => setOutcome({ ...outcome, guide: e.target.value })}/><div className="editor-footer"><p>Projects, resources, documents, and prototypes are all welcome.</p><button disabled={busy} onClick={saveOutcome}>{outcome.id ? 'Update outcome' : 'Publish outcome'} <span aria-hidden="true">↗</span></button></div></section>}
-        {pageMode === 'board' && view === 'share' && <OutcomeShowcase posts={stagePosts} currentUser={user} displayName={name} isAdmin={!!isAdmin} onEdit={post => editPost('share', post)} onDelete={post => void removePost('share', post)} onNewPost={() => { setOpenPost(null); setPageMode('editor'); }} teamPick={teamPickInfo && teamPickInfo.phase === 'team' && teamPickInfo.ownTeam ? { team: teamPickInfo.ownTeam, assignments: teamPickInfo.assignments, ownRepresentativeId: teamPickInfo.ownRepresentativeId, busy: teamPickBusy, onPick: postId => void pickRepresentative(postId) } : undefined}/>}
+        {view === 'share' && pageMode === 'editor' && <section className="editor-panel"><div className="panel-heading"><div><p className="eyebrow">YOUR CONTRIBUTION</p><h3>Share your outcome</h3></div><span className="privacy-pill">Shared with the group</span></div><div className="form-grid"><div className="field"><label htmlFor="outcome-name">Title</label><input id="outcome-name" placeholder="What did you create?" value={outcome.name} onChange={e => setOutcome({ ...outcome, name: e.target.value })}/></div><div className="field"><label htmlFor="outcome-url">Link <span className="optional">optional</span></label><input id="outcome-url" type="url" placeholder="https://..." value={outcome.url} onChange={e => setOutcome({ ...outcome, url: e.target.value })}/></div><div className="field"><label htmlFor="outcome-problem">Problem addressed</label><textarea id="outcome-problem" placeholder="What challenge does it respond to?" value={outcome.problem} onChange={e => setOutcome({ ...outcome, problem: e.target.value })}/></div><div className="field"><label htmlFor="outcome-features">What it does</label><textarea id="outcome-features" placeholder="Describe the main features or result." value={outcome.features} onChange={e => setOutcome({ ...outcome, features: e.target.value })}/></div></div><label htmlFor="outcome-guide">Introduction or instructions <span className="optional">optional</span></label><textarea id="outcome-guide" placeholder="Anything your peers should know before exploring?" value={outcome.guide} onChange={e => setOutcome({ ...outcome, guide: e.target.value })}/><OutcomeSelfAssessment idPrefix="outcome" value={outcome.selfAssessment} onChange={selfAssessment => setOutcome(previous => ({ ...previous, selfAssessment }))}/><div className="editor-footer"><p>Projects, resources, documents, and prototypes are all welcome.</p><button disabled={busy || ((!editing || editing.post.ownerId === user?.uid) && !validSelfAssessment(outcome.selfAssessment))} onClick={saveOutcome}>{outcome.id ? 'Update outcome' : 'Publish outcome'} <span aria-hidden="true">↗</span></button></div></section>}
+        {pageMode === 'board' && view === 'share' && <OutcomeShowcase posts={stagePosts} currentUser={user} displayName={name} isAdmin={!!isAdmin} onEdit={post => editPost('share', post)} onDelete={post => void removePost('share', post)} onNewPost={() => { setOpenPost(null); setPageMode('editor'); }}/>}
         {pageMode === 'board' && view !== 'share' && <section className="board board-primary"><div className="board-heading"><div><h3>Shared work <span>{stagePosts.length}</span></h3><p>Ideas and progress from the group.</p></div></div><div className="post-grid">{visiblePosts.length ? visiblePosts.map(post => <PostCard key={post.id} stage={active.key} post={post} currentUser={user} isAdmin={isAdmin} expanded={openPost?.stage === active.key && openPost.id === post.id} position={stagePosts.findIndex(entry => entry.id === post.id) + 1} total={stagePosts.length} onToggle={() => setOpenPost(previous => previous?.stage === active.key && previous.id === post.id ? null : { stage: active.key, id: post.id })} onNavigate={direction => { const next = stagePosts[openPostIndex + direction]; if (next) setOpenPost({ stage: active.key, id: next.id }); }} onEdit={editPost} onDelete={removePost}/>) : <div className="empty-state"><span aria-hidden="true">✳</span><h4>No posts yet</h4><p>Be the first to share your work in this step.</p></div>}</div></section>}
       </>}
-      {view === 'evaluation' && allowed('evaluation') && <>{isAdmin && !settings.evaluation && <p className="notice">Evaluation is currently hidden from participants. Open it in Admin controls when you are ready.</p>}<EvaluationPanel user={user} isAdmin={!!isAdmin} displayName={name} outcomes={posts.share} onOpenOutcomes={() => { setView('share'); setPageMode('board'); }}/></>}
-      {view === 'admin' && isAdmin && <section className="admin-area"><div className="section-heading"><p className="eyebrow">WORKSHOP MANAGEMENT</p><h2>Admin controls</h2><p>Manage access, accounts, and contributions across all stages.</p></div><div className="admin-section"><h3>Stage visibility</h3><p className="muted">Every stage remains in the menu. Closed stages show a workshop-day notice to participants; you can always access them.</p><div className="visibility-grid">{[...stages, evaluationStage].map(stage => <div className={`visibility-card stage-${stage.key}`} key={stage.key}><span className="stage-number">{stage.number}</span><strong>{stage.title}</strong><span className={`status-pill ${settings[stage.key] ? 'open' : ''}`}>{settings[stage.key] ? 'Open' : 'Opens workshop day'}</span><button className="secondary" onClick={() => toggle(stage.key)}>{settings[stage.key] ? 'Close for participants' : 'Open to participants'}</button></div>)}</div></div><div className="admin-section"><h3>Participant accounts</h3><div className="table-wrap"><table className="admin-table"><thead><tr><th>Nickname</th><th>Email</th><th>New password</th><th></th></tr></thead><tbody>{users.map(account => <UserRow key={account.uid} account={account} onSave={editUser}/>)}</tbody></table></div></div><div className="admin-section"><h3>All contributions</h3>{stages.map(stage => <div className="admin-post-group" key={stage.key}><h4>{stage.title} <span>{adminPosts[stage.key].length}</span></h4>{adminPosts[stage.key].map(post => <div className="admin-post" key={post.id}><div><strong>{post.name || post.text?.slice(0, 75) || post.problem?.slice(0, 75) || 'Untitled'}</strong><small>{post.ownerName || post.ownerId} · {post.isPublic ? 'Shared' : 'Private legacy post'}</small></div><div className="actions"><button className="secondary" onClick={() => editPost(stage.key, post)}>Edit</button><button className="danger" onClick={() => removePost(stage.key, post)}>Remove</button></div></div>)}</div>)}</div></section>}
+      {view === 'admin' && isAdmin && <section className="admin-area"><div className="section-heading"><p className="eyebrow">WORKSHOP MANAGEMENT</p><h2>Admin controls</h2><p>Manage access, accounts, and contributions across all stages.</p></div><div className="admin-section"><h3>Stage visibility</h3><p className="muted">Every stage remains in the menu. Closed stages show a workshop-day notice to participants; you can always access them.</p><div className="visibility-grid">{stages.map(stage => <div className={`visibility-card stage-${stage.key}`} key={stage.key}><span className="stage-number">{stage.number}</span><strong>{stage.title}</strong><span className={`status-pill ${settings[stage.key] ? 'open' : ''}`}>{settings[stage.key] ? 'Open' : 'Opens workshop day'}</span><button className="secondary" onClick={() => toggle(stage.key)}>{settings[stage.key] ? 'Close for participants' : 'Open to participants'}</button></div>)}</div></div><div className="admin-section"><h3>Participant accounts</h3><div className="table-wrap"><table className="admin-table"><thead><tr><th>Nickname</th><th>Email</th><th>New password</th><th></th></tr></thead><tbody>{users.map(account => <UserRow key={account.uid} account={account} onSave={editUser}/>)}</tbody></table></div></div><div className="admin-section"><h3>All contributions</h3>{stages.map(stage => <div className="admin-post-group" key={stage.key}><h4>{stage.title} <span>{adminPosts[stage.key].length}</span></h4>{adminPosts[stage.key].map(post => <div className="admin-post" key={post.id}><div><strong>{post.name || post.text?.slice(0, 75) || post.problem?.slice(0, 75) || 'Untitled'}</strong><small>{post.ownerName || post.ownerId} · {post.isPublic ? 'Shared' : 'Private legacy post'}</small></div><div className="actions"><button className="secondary" onClick={() => editPost(stage.key, post)}>Edit</button><button className="danger" onClick={() => removePost(stage.key, post)}>Remove</button></div></div>)}</div>)}</div></section>}
     </div>
     <SiteFooter/>
     {guideOpen && <AssignmentGuideModal content={content} onClose={() => void closeGuide()} onStart={() => void closeGuide(true)}/>}
