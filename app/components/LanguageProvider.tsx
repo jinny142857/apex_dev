@@ -26,7 +26,7 @@ const translations: Record<string, string> = {
   'PRD progress': 'PRD 작성 진행 상황', 'Your problem': '문제 확인', 'App idea': '앱 아이디어', 'Review & download': '검토 및 다운로드', 'Edit': '수정',
   'Check the problem you brought from Pre-work.': '사전 과제에서 가져온 문제를 확인하세요.',
   'Change it only if a clearer version will help you design the app.': '앱을 설계하는 데 도움이 된다면 문장을 더 명확하게 다듬으세요.',
-  'Browse references': '레퍼런스 보기', 'PROBLEM REFERENCES': '문제 정의 레퍼런스', 'Choose a starting problem': '출발할 문제를 고르세요',
+  'Browse references': '레퍼런스 보기', '28 problems · 6 topics': '문제 28개 · 주제 6개', 'PROBLEM REFERENCES': '문제 정의 레퍼런스', 'Choose a starting problem': '출발할 문제를 고르세요',
   'Choose a category, then bring one problem sentence into your draft.': '카테고리를 고른 뒤 문제 문장 하나를 가져오세요.',
   'Categories': '카테고리', 'All categories': '모든 카테고리', 'problems': '개 문제', 'PROBLEM STATEMENT': '문제 정의',
   'Browse examples, then bring one sentence into Your problem. You can edit it afterward.': '예시를 살펴보고 문장 하나를 가져오세요. 불러온 뒤 자유롭게 수정할 수 있습니다.',
