@@ -40,14 +40,13 @@ function PreviewTaskEditor({ kind, content, onPublish, onClose }: { kind: 'prewo
     onClose();
   };
   if (kind === 'prework') return <section className="preview-content preview-task-editor"><div className="preview-task-columns"><aside className="preview-task-guide"><span className="eyebrow">ASSIGNMENT GUIDE</span>{content ? <><div className="markdown"><ReactMarkdown>{splitPreworkGuide(content).intro}</ReactMarkdown></div><PreworkExample/><div className="markdown"><ReactMarkdown>{splitPreworkGuide(content).rest}</ReactMarkdown></div></> : <p>Loading…</p>}</aside><div className="preview-task-response"><span className="eyebrow">YOUR RESPONSE</span><h2>Build your statement</h2><p className="prework-entry-help">Fill in the four boxes below. Your statement will appear automatically in “Your statement,” where you can edit it.</p><div className="prework-parts"><label>WHO <small>Who experiences this?</small><input value={parts.who} onChange={event => setParts({ ...parts, who: event.target.value })} placeholder="e.g. Teachers who share school spaces and equipment"/></label><label>TASK <small>What are they trying to do?</small><input value={parts.task} onChange={event => setParts({ ...parts, task: event.target.value })} placeholder="e.g. check availability and avoid conflicts"/></label><label>SITUATION <small>When or where does it happen?</small><input value={parts.situation} onChange={event => setParts({ ...parts, situation: event.target.value })} placeholder="e.g. when booking rooms for lessons"/></label><label>ROOT CAUSE <small>Why does it keep happening?</small><input value={parts.rootCause} onChange={event => setParts({ ...parts, rootCause: event.target.value })} placeholder="e.g. bookings are managed separately"/></label></div><label htmlFor="preview-prework">Your statement</label><textarea id="preview-prework" className="prework-preview" value={statement} onChange={event => setStatement(event.target.value)}/><div><button className="secondary" onClick={onClose}>← Back</button><button disabled={!Object.values(parts).every(value => value.trim())} onClick={publish}>Publish post →</button></div></div></div></section>;
-  async function assistDemo(mode: 'goal' | 'ideas' | 'features', context: AssistContext): Promise<AssistResult> {
+  async function assistDemo(mode: 'ideas' | 'features', context: AssistContext): Promise<AssistResult> {
     if (process.env.NODE_ENV === 'development') {
       const response = await fetch('/api/prd-ideas', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-APEX-Demo': '2026' }, body: JSON.stringify({ mode, ...context }) });
       const result = await response.json();
       if (!response.ok) throw new Error(result.error || 'Could not generate ideas.');
       return result;
     }
-    if (mode === 'goal') return { goal: 'Teachers can coordinate shared rooms with fewer messages and booking conflicts.' };
     if (mode === 'features') return { features: /equipment/i.test(context.appIdea)
       ? ['View available shared equipment', 'Submit an equipment request', 'Check or update my request status']
       : /room|booking|reserv/i.test(context.appIdea)

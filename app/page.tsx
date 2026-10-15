@@ -265,7 +265,7 @@ export default function Home() {
     try { localStorage.setItem(`apex-prd-draft-${editing?.stage === 'prd' ? editing.post.id : user.uid}`, JSON.stringify(next)); return true; }
     catch { return false; }
   }
-  async function assistPrd(mode: 'goal' | 'ideas' | 'features', context: AssistContext) {
+  async function assistPrd(mode: 'ideas' | 'features', context: AssistContext) {
     if (!user) throw new Error('Sign in to get AI ideas.');
     const token = await user.getIdToken();
     const response = await fetch('/api/prd-ideas', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }, body: JSON.stringify({ mode, ...context }) });
