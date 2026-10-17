@@ -44,16 +44,15 @@ export default function OutcomeReportPage() {
 
     if (params.get('demo') === '1') {
       if (localStorage.getItem('apexDevDemoAccess') !== 'yes') { setError('Open Demo mode first.'); return; }
-      let post = makeDemoOutcomes().find(item => item.id === postId);
-      if (!post) {
-        try { post = JSON.parse(localStorage.getItem(`apex-demo-outcome-${postId}`) || 'null'); }
-        catch { /* Ignore an invalid local sample. */ }
-      }
+      let post: ReturnType<typeof makeDemoOutcomes>[number] | undefined;
+      try { post = JSON.parse(localStorage.getItem(`apex-demo-outcome-${postId}`) || 'null'); }
+      catch { /* Ignore an invalid local sample. */ }
+      post ||= makeDemoOutcomes().find(item => item.id === postId);
       if (!post) { setError('This sample outcome was not found.'); return; }
       let samplePrd: Partial<Prd> | undefined;
       try { samplePrd = JSON.parse(localStorage.getItem(`apex-demo-outcome-prd-${postId}`) || 'null') || undefined; }
       catch { /* Ignore an invalid demo PRD. */ }
-      setReport({ name: post.name || 'Final outcome', ownerName: post.ownerName || 'Participant', url: post.url, problem: post.problem, features: post.features, prd: samplePrd, selfAssessment: post.selfAssessment, demo: true });
+      setReport({ name: post.name || 'Final outcome', ownerName: post.ownerName || 'Participant', url: post.url, problem: post.problem, features: post.features, guide: post.guide, prd: samplePrd, selfAssessment: post.selfAssessment, selfAssessmentScale: post.selfAssessmentScale, demo: true });
       return;
     }
 
@@ -72,7 +71,7 @@ export default function OutcomeReportPage() {
         setReport({
           name: post.name || 'Final outcome', ownerName: post.ownerName || user.displayName || 'Participant',
           url: post.url, problem: post.problem, features: post.features, guide: post.guide,
-          selfAssessment: post.selfAssessment,
+          selfAssessment: post.selfAssessment, selfAssessmentScale: post.selfAssessmentScale,
           prework: prework.data()?.text, prd: prd.data() as Partial<Prd> | undefined,
         });
       } catch (cause) {

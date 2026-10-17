@@ -18,5 +18,13 @@ export const emptySelfAssessment: OutcomeSelfAssessment = {
 };
 
 export function validSelfAssessment(value?: Partial<OutcomeSelfAssessment> | null) {
-  return selfAssessmentItems.every(({ key }) => Number.isInteger(value?.[key]) && Number(value?.[key]) >= 1 && Number(value?.[key]) <= 10);
+  return selfAssessmentItems.every(({ key }) => Number.isInteger(value?.[key]) && Number(value?.[key]) >= 1 && Number(value?.[key]) <= 5);
+}
+
+export function normalizeSelfAssessment(value?: Partial<OutcomeSelfAssessment> | null, scale?: number): OutcomeSelfAssessment {
+  return Object.fromEntries(selfAssessmentItems.map(({ key }) => {
+    const score = value?.[key];
+    if (!Number.isInteger(score) || score === null || score === undefined || score < 1) return [key, null];
+    return [key, scale === 5 ? (score <= 5 ? score : null) : (score <= 10 ? Math.ceil(score / 2) : null)];
+  })) as OutcomeSelfAssessment;
 }

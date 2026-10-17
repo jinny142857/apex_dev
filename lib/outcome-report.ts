@@ -1,5 +1,5 @@
 import { stripProblemBrackets, type Prd } from './prd';
-import { selfAssessmentItems, validSelfAssessment, type OutcomeSelfAssessment } from './outcome-self-assessment';
+import { normalizeSelfAssessment, selfAssessmentItems, validSelfAssessment, type OutcomeSelfAssessment } from './outcome-self-assessment';
 
 export type OutcomeReport = {
   name: string;
@@ -12,6 +12,7 @@ export type OutcomeReport = {
   prework?: string;
   prd?: Partial<Prd>;
   selfAssessment?: OutcomeSelfAssessment;
+  selfAssessmentScale?: number;
 };
 
 function escapeHtml(value: string) {
@@ -41,7 +42,7 @@ export function buildOutcomeReportHtml(report: OutcomeReport) {
   const prework = stripProblemBrackets(report.prework || '');
   const problem = stripProblemBrackets(prd?.problem || prd?.refinedProblem || prework || report.problem || '');
   const prdContent = [
-    field('Intended users', prd?.user), field('Goal', prd?.goal), field('App idea', prd?.appIdea),
+    field('Intended users', prd?.user), field('App idea', prd?.appIdea),
     field('Core features', prd?.features), field('Inclusive design', prd?.inclusiveDesign),
     field('Design requirements', prd?.design),
   ].join('');
@@ -52,8 +53,9 @@ export function buildOutcomeReportHtml(report: OutcomeReport) {
     url ? `<div class="report-field report-link"><h3>Website</h3><a href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(url)}</a></div>` : '',
     url ? `<div class="report-field live-preview"><h3>Live web app</h3><p class="preview-note">The site loads here when you are online and the site permits embedding. If the frame stays blank, use <a href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer">Open site ↗</a>.</p><div class="preview-frame"><iframe src="${escapeHtml(url)}" title="Live preview of ${title}" loading="lazy" referrerpolicy="no-referrer" allow="fullscreen" sandbox="allow-forms allow-scripts allow-same-origin allow-popups allow-downloads"></iframe></div></div>` : '',
   ].join('');
-  const assessmentContent = validSelfAssessment(report.selfAssessment)
-    ? `<div class="report-field self-assessment-report"><h3>Self-check · 1–10</h3><div class="self-assessment-report-grid">${selfAssessmentItems.map(({ key, title }) => `<div><span>${escapeHtml(title)}</span><strong>${report.selfAssessment?.[key]} / 10</strong></div>`).join('')}</div></div>`
+  const assessment = normalizeSelfAssessment(report.selfAssessment, report.selfAssessmentScale);
+  const assessmentContent = validSelfAssessment(assessment)
+    ? `<div class="report-field self-assessment-report"><h3>Self-check · 1–5</h3><div class="self-assessment-report-grid">${selfAssessmentItems.map(({ key, title }) => `<div><span>${escapeHtml(title)}</span><strong>${assessment[key]} / 5</strong></div>`).join('')}</div></div>`
     : '';
   return `<main class="sheet"><div class="eyebrow">APEX DEV · Final outcome</div><h1>${title}</h1><p class="meta">By ${escapeHtml(report.ownerName || 'Participant')} · ${escapeHtml(new Date().toLocaleDateString('en-CA'))}</p>
     <div class="journey-heading"><span>THE JOURNEY</span><h3>From a school challenge to a web app</h3></div>

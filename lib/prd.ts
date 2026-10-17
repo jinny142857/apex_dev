@@ -12,13 +12,20 @@ export function stripProblemBrackets(text: string) {
   return text.replace(/\[([^\[\]]+)\]/g, '$1');
 }
 
+export function outcomeSummaryFromPrd(prd: Partial<Prd>, prework = '') {
+  const featureLines = (prd.features || '').split('\n').map(line => line.trim().replace(/^([-*]|\d+[.)])\s*/, '')).filter(Boolean);
+  return {
+    problem: stripProblemBrackets(prd.problem || prd.refinedProblem || prework),
+    features: [(prd.appIdea || '').trim(), ...featureLines.map(line => `• ${line}`)].filter(Boolean).join('\n'),
+  };
+}
+
 export function buildPrdMarkdown(prd: Prd, currentPrework: string) {
   const problem = stripProblemBrackets(prd.problem.trim() || prd.refinedProblem.trim() || currentPrework.trim());
-  const goal = prd.goal.trim();
   const user = prd.user.trim();
   const appIdea = prd.appIdea.trim();
   const features = prd.features.split('\n').map(item => item.trim().replace(/^([-*]|\d+[.)])\s*/, '')).filter(Boolean);
-  const sections = [`# Product Requirements Document`, '', '## Problem', problem || 'Not provided', '', '## User', user || 'Not provided', '', '## Goal', goal || 'Not provided', '', '## App idea', appIdea || 'Not provided', ...(features.length ? ['', '## Core features', features.map((item, index) => `${index + 1}. ${item}`).join('\n')] : [])].join('\n');
+  const sections = [`# Product Requirements Document`, '', '## Problem', problem || 'Not provided', '', '## User', user || 'Not provided', '', '## App idea', appIdea || 'Not provided', ...(features.length ? ['', '## Core features', features.map((item, index) => `${index + 1}. ${item}`).join('\n')] : [])].join('\n');
   const inclusiveDesign = (prd.inclusiveDesign || '').trim();
   const design = prd.design.trim();
   const inclusiveSection = inclusiveDesign ? `\n\n## Inclusive design\n${inclusiveDesign}` : '';
