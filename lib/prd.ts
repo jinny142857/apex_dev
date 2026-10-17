@@ -42,6 +42,8 @@ The app will be built and deployed as a Google Apps Script web app. Deliver the 
 
 Provide enough realistic, fictional sample data to demonstrate every core feature from the first launch. If the app uses Google Sheets, include a \`setup()\` function that creates the required sheets and populates them with 10–20 sample rows. Unless another style is specified, use a clean, restrained glassmorphism design.
 
+If a core feature depends on official terminology, curriculum codes, institutional criteria, or expert-authored content, ask the user for the authoritative source or examples before treating that data as final. Do not invent authoritative values. You may use clearly labeled fictional placeholders to demonstrate the interface, but require the user to review and replace them before real use.
+
 Add a visible Privacy Policy link in the app footer. Clicking it must open an accessible modal (dialog label and focus management) with the full policy, a close button, and Escape-key dismissal. Write the policy for the data and services this particular app actually uses: what is collected, why, where it is stored, who can access it, how long it is kept, any third-party services, and how users can make a privacy request. Do not invent an organization, contact address, retention period, or data practice; use a clearly labeled placeholder where an operator decision is still needed. Write the policy in the app’s user-facing language. If the app collects no personal data, say that accurately. Use sample or anonymized information in the prototype and do not include real student personal information.
 `;
 }
