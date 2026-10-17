@@ -5,10 +5,10 @@ import { preworkCategories } from '@/lib/prework-examples';
 import { useLanguage } from './LanguageProvider';
 import WorkshopIcon from './WorkshopIcon';
 
-type Props = { currentProblem: string; onImport: (problem: string) => void; onClose: () => void };
+type Props = { currentProblem: string; hasDownstreamContent: boolean; onImport: (problem: string, referenceId: string) => void; onClose: () => void };
 const categoryIcons = { A: 'screen', B: 'assignment', C: 'people', D: 'spark', E: 'survey', F: 'document' } as const;
 
-export default function PreworkReferenceDialog({ currentProblem, onImport, onClose }: Props) {
+export default function PreworkReferenceDialog({ currentProblem, hasDownstreamContent, onImport, onClose }: Props) {
   const { language, tr } = useLanguage();
   const [categoryIndex, setCategoryIndex] = useState<number | null>(null);
   const [exampleIndex, setExampleIndex] = useState(0);
@@ -30,11 +30,11 @@ export default function PreworkReferenceDialog({ currentProblem, onImport, onClo
 
   function requestImport() {
     if (!example) return;
-    if (currentProblem.trim() && currentProblem.trim() !== example.problemStatement) {
+    if (hasDownstreamContent && currentProblem.trim() !== example.problemStatement) {
       setConfirmReplace(true);
       return;
     }
-    onImport(example.problemStatement);
+    onImport(example.problemStatement, example.id);
   }
 
   return <div className="prd-reference-backdrop" onMouseDown={event => { if (event.target === event.currentTarget) onClose(); }}>
@@ -53,7 +53,7 @@ export default function PreworkReferenceDialog({ currentProblem, onImport, onClo
             {category.examples.map((item, index) => <button type="button" key={item.id} aria-pressed={exampleIndex === index} className={exampleIndex === index ? 'selected' : ''} onClick={() => { setExampleIndex(index); setConfirmReplace(false); }}><span>{item.id}</span><strong>{item.title}</strong><span aria-hidden="true">→</span></button>)}
           </div>
           {example && <div className="prd-reference-preview"><span className="eyebrow">{tr('PROBLEM STATEMENT')}</span><h3>{example.title}</h3><p>{example.problemStatement}</p>
-            {confirmReplace && <div className="prd-reference-confirm" role="alert"><strong>{tr('Replace your current problem?')}</strong><p>{tr('Your current problem sentence will be replaced. The other PRD fields will stay as they are.')}</p><div><button type="button" className="secondary" onClick={() => setConfirmReplace(false)}>{tr('Keep my problem')}</button><button type="button" onClick={() => onImport(example.problemStatement)}>{tr('Replace problem')}</button></div></div>}
+            {confirmReplace && <div className="prd-reference-confirm" role="alert"><strong>{tr('Replace your current problem?')}</strong><p>{tr('The new problem will replace this one. Your User, Goal, App idea, Core features, and design answers will be cleared so you can build a matching plan.')}</p><div><button type="button" className="secondary" onClick={() => setConfirmReplace(false)}>{tr('Keep my problem')}</button><button type="button" onClick={() => onImport(example.problemStatement, example.id)}>{tr('Replace problem')}</button></div></div>}
             {!confirmReplace && <button type="button" className="prd-reference-use" onClick={requestImport}>{tr('Use this problem')} →</button>}
           </div>}
         </div>

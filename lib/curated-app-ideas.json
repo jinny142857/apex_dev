@@ -1,0 +1,758 @@
+[
+  {
+    "id": "A1",
+    "title": "Shared room booking",
+    "problemStatement": "Teachers who use a shared room struggle to know whether it is available when planning lessons because booking changes are passed on verbally or written on a schedule that is not updated for everyone.",
+    "ideas": [
+      {
+        "id": "A1-1",
+        "title": "Shared Room Booking",
+        "appIdea": "A shared room booking app where teachers check fixed lesson periods and reserve an available room.",
+        "features": [
+          "View room availability for a selected date and lesson period.",
+          "Reserve one available room with a teacher name and class.",
+          "Cancel a booking and refresh the shared schedule."
+        ]
+      },
+      {
+        "id": "A1-2",
+        "title": "Room Request Board",
+        "appIdea": "A room request board where teachers submit preferred periods and the room coordinator records confirmed bookings.",
+        "features": [
+          "Submit a request for a room, date, and lesson period.",
+          "View requests by date and see whether each is pending, confirmed, or declined.",
+          "Confirm or decline a request and show the updated room schedule."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "A2",
+    "title": "Equipment loans",
+    "problemStatement": "Teachers who share projectors, speakers, or lab kits struggle to locate an item and arrange its next use when preparing a lesson because borrowing and return details are not recorded in one place.",
+    "ideas": [
+      {
+        "id": "A2-1",
+        "title": "Equipment Loan Log",
+        "appIdea": "An equipment loan log where teachers record who has an item and when it is expected back.",
+        "features": [
+          "View each item’s availability, current borrower, and expected return date.",
+          "Record a loan for an available item with a teacher label.",
+          "Mark an item as returned and keep its loan history."
+        ]
+      },
+      {
+        "id": "A2-2",
+        "title": "Equipment Request Queue",
+        "appIdea": "An equipment request queue where teachers join a shared waiting list and staff record the next loan and return.",
+        "features": [
+          "View each item’s current loan status and waiting requests.",
+          "Add a teacher’s request to an item’s queue.",
+          "Assign an available item to a waiting teacher or mark the current loan as returned."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "A3",
+    "title": "Consumable supplies",
+    "problemStatement": "Teachers who rely on shared classroom supplies struggle to request replacements before materials run out when preparing practical activities because remaining stock and pending requests are known only to whoever last handled the supplies.",
+    "ideas": [
+      {
+        "id": "A3-1",
+        "title": "Supply Stock Tracker",
+        "appIdea": "A supply stock tracker where teachers record stock changes and see which classroom supplies are running low.",
+        "features": [
+          "View supply quantities and highlight items below a manually set minimum.",
+          "Record a quantity used or received for one supply item.",
+          "View the saved stock-change history for an item."
+        ]
+      },
+      {
+        "id": "A3-2",
+        "title": "Supply Request Board",
+        "appIdea": "A supply request board where teachers request classroom materials and staff share the fulfilment status.",
+        "features": [
+          "Submit a supply request with an item, quantity, and needed-by date.",
+          "View shared requests and filter them by item or status.",
+          "Mark a request as being prepared or supplied and add a short note."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "A4",
+    "title": "Repair requests",
+    "problemStatement": "Teachers who report broken classroom equipment struggle to know whether a repair has been assigned or completed when the item is needed again because reports and updates are exchanged separately with different staff members.",
+    "ideas": [
+      {
+        "id": "A4-1",
+        "title": "Repair Request Board",
+        "appIdea": "A repair request board where teachers report broken equipment and staff record the next action.",
+        "features": [
+          "Submit an equipment problem with its location and a short description.",
+          "View repair requests by location or status.",
+          "Record a person responsible, update the status, and add a completion note."
+        ]
+      },
+      {
+        "id": "A4-2",
+        "title": "Equipment Condition Register",
+        "appIdea": "An equipment condition register where staff can see an item’s latest condition and previous repair notes.",
+        "features": [
+          "Browse equipment and see whether each item is usable or needs attention.",
+          "Add a dated inspection or repair note for a selected item.",
+          "Update the item’s condition and review its saved history."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "A5",
+    "title": "Shared teaching materials",
+    "problemStatement": "Teachers who use a limited set of shared textbooks or activity materials struggle to prepare enough copies for their classes when several classes need the same set because nobody can easily see how many are available or in use.",
+    "ideas": [
+      {
+        "id": "A5-1",
+        "title": "Teaching Set Reservations",
+        "appIdea": "A teaching set reservation app where teachers reserve a quantity of shared materials for a fixed lesson period.",
+        "features": [
+          "View the available quantity of a teaching set for a selected date and period.",
+          "Reserve the quantity needed for a class.",
+          "Cancel a reservation and update the shared availability."
+        ]
+      },
+      {
+        "id": "A5-2",
+        "title": "Teaching Material Checkout",
+        "appIdea": "A teaching material checkout app where teachers record how many copies they have taken and returned.",
+        "features": [
+          "View the total, checked-out, and available quantities for each material.",
+          "Record a quantity taken by a teacher or class.",
+          "Record returned quantities and show any quantity still outstanding."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "B1",
+    "title": "Event task coordination",
+    "problemStatement": "Staff members organizing a school event struggle to know who is responsible for each remaining task when plans change close to the event because assignments and updates are spread across meetings, messages, and paper notes.",
+    "ideas": [
+      {
+        "id": "B1-1",
+        "title": "Event Task Board",
+        "appIdea": "An event task board where staff share responsibilities, deadlines, and task status for one school event.",
+        "features": [
+          "Add an event task with a person responsible and a due date.",
+          "View tasks by person or status.",
+          "Update a task as to do, in progress, or done and add a short note."
+        ]
+      },
+      {
+        "id": "B1-2",
+        "title": "Event Readiness Checklist",
+        "appIdea": "An event readiness checklist where staff record whether essential preparations are ready and what is blocking them.",
+        "features": [
+          "Create preparation checklist items with a location and a person responsible.",
+          "Mark items as ready or needing action and record a blocker.",
+          "View unfinished items and a count of ready items."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "B2",
+    "title": "Permission form collection",
+    "problemStatement": "Teachers collecting permission forms for school activities struggle to identify whose forms still need follow-up when several forms are due at different times because returned papers and submission notes are kept separately.",
+    "ideas": [
+      {
+        "id": "B2-1",
+        "title": "Permission Form Tracker",
+        "appIdea": "A permission form tracker where teachers record paper form returns and find students who need follow-up.",
+        "features": [
+          "Create a form-collection list using sample student labels and a due date.",
+          "Mark each student’s form as received or still missing.",
+          "Filter missing forms and record a follow-up note."
+        ]
+      },
+      {
+        "id": "B2-2",
+        "title": "Class Form Collection Summary",
+        "appIdea": "A class form collection summary where class teachers report returned-form counts so staff can see which classes need follow-up.",
+        "features": [
+          "Create a collection task with participating classes and expected totals.",
+          "Enter each class’s returned count and follow-up note.",
+          "View remaining counts and filter classes with incomplete collections."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "B3",
+    "title": "Notice distribution",
+    "problemStatement": "Teachers responsible for sending school notices struggle to confirm which classes have received the latest version when details change after the first notice because copies and corrections are distributed through different channels without a shared delivery record.",
+    "ideas": [
+      {
+        "id": "B3-1",
+        "title": "Notice Delivery Tracker",
+        "appIdea": "A notice delivery tracker where staff publish the latest notice text and class teachers confirm which version they delivered.",
+        "features": [
+          "Create a notice or update its text with a new version number.",
+          "Record the version delivered to each class.",
+          "Show classes that have not received the latest version."
+        ]
+      },
+      {
+        "id": "B3-2",
+        "title": "Notice Correction Board",
+        "appIdea": "A notice correction board where staff record changed details and check that each affected class has received the correction.",
+        "features": [
+          "Post a correction with the old detail, new detail, and affected classes.",
+          "Mark each class as informed about that correction.",
+          "View corrections that still need to be passed on."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "B4",
+    "title": "Meeting follow-up",
+    "problemStatement": "Staff members who leave a school meeting with assigned actions struggle to see what remains unfinished before the next meeting because decisions and deadlines are embedded in notes that each attendee keeps differently.",
+    "ideas": [
+      {
+        "id": "B4-1",
+        "title": "Meeting Action Register",
+        "appIdea": "A meeting action register where staff turn meeting decisions into shared tasks with owners and deadlines.",
+        "features": [
+          "Add an action agreed at a meeting with a person responsible and a due date.",
+          "View open actions by meeting or person.",
+          "Mark actions as completed and save a progress note."
+        ]
+      },
+      {
+        "id": "B4-2",
+        "title": "Next Meeting Follow-up Board",
+        "appIdea": "A follow-up board where staff bring unresolved decisions and progress updates to the next meeting.",
+        "features": [
+          "Record a follow-up item with its previous decision and a check-in date.",
+          "Add a brief progress update or blocker to an item.",
+          "View items due for discussion and mark resolved items as closed."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "B5",
+    "title": "Library book circulation",
+    "problemStatement": "Teachers or school staff who lend books from a small school library struggle to tell which titles can be borrowed when students request them because loans and returns are recorded in different notebooks or at different desks.",
+    "ideas": [
+      {
+        "id": "B5-1",
+        "title": "School Book Loan Register",
+        "appIdea": "A school book loan register where staff record loans and returns and check which physical copies are available.",
+        "features": [
+          "Search books by title and see the status of each copy.",
+          "Lend an available copy to a sample borrower with a due date.",
+          "Record a return and view outstanding loans."
+        ]
+      },
+      {
+        "id": "B5-2",
+        "title": "Book Request Queue",
+        "appIdea": "A book request queue where staff record requests for a book and manage the next loan when a copy becomes available.",
+        "features": [
+          "View book copies, current loans, and waiting requests.",
+          "Add a sample borrower’s request to a book’s waiting list.",
+          "Assign an available copy to a request and mark it returned when it comes back."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "C1",
+    "title": "Reusing lesson activities",
+    "problemStatement": "Teachers teaching the same topic struggle to find an activity a colleague has already tried when preparing the next lesson because plans and notes are stored in personal notebooks or separate files without a shared way to search them.",
+    "ideas": [
+      {
+        "id": "C1-1",
+        "title": "Tried Activity Library",
+        "appIdea": "A tried activity library where teachers save short activity descriptions and find ideas their colleagues have used.",
+        "features": [
+          "Add an activity card with a topic, age group, instructions, and materials.",
+          "Search and filter saved cards by topic or age group.",
+          "Add a short note after trying an activity and view colleagues’ notes."
+        ]
+      },
+      {
+        "id": "C1-2",
+        "title": "Activity Request Exchange",
+        "appIdea": "An activity request exchange where teachers ask for help with a topic and colleagues reply with an activity they have tried.",
+        "features": [
+          "Post an activity request with a topic and classroom need.",
+          "Reply with a tried activity, instructions, and materials.",
+          "Browse requests by topic and mark a helpful response as selected."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "C2",
+    "title": "Cover lesson handover",
+    "problemStatement": "Teachers covering a colleague's class struggle to know what students have already learned and what materials they need when taking over at short notice because the current plan and classroom notes are held by the absent teacher.",
+    "ideas": [
+      {
+        "id": "C2-1",
+        "title": "Cover Lesson Handover",
+        "appIdea": "A cover lesson handover app where teachers leave the current lesson plan and covering teachers record what was completed.",
+        "features": [
+          "Save a class-and-date handover with the topic, last completed work, and material location.",
+          "Find the handover for a selected class and date.",
+          "Record what was taught and what the next teacher should continue."
+        ]
+      },
+      {
+        "id": "C2-2",
+        "title": "Cover Lesson Checklist",
+        "appIdea": "A cover lesson checklist where teachers break a cover lesson into preparation and teaching steps with clear handover notes.",
+        "features": [
+          "Create a class-and-date checklist with activity steps and required materials.",
+          "Mark each step as prepared or completed during the cover lesson.",
+          "Save an end-of-lesson note and view any unfinished steps."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "C3",
+    "title": "Curriculum progress across classes",
+    "problemStatement": "Teachers who teach the same subject to different classes struggle to coordinate the next shared activity when classes are moving at different speeds because each class's progress is recorded in a separate planning book.",
+    "ideas": [
+      {
+        "id": "C3-1",
+        "title": "Class Progress Matrix",
+        "appIdea": "A class progress matrix where teachers record the latest completed topic for each class and compare readiness for a shared activity.",
+        "features": [
+          "Record a class’s latest completed topic and date for one subject.",
+          "View all classes side by side with their current topic and next step.",
+          "Update a class record and keep a short progress history."
+        ]
+      },
+      {
+        "id": "C3-2",
+        "title": "Shared Activity Readiness",
+        "appIdea": "A shared activity readiness app where teachers agree on prerequisite steps and record which classes are ready to join.",
+        "features": [
+          "Create one shared activity with up to three prerequisite topics.",
+          "Mark each class’s completion of the prerequisite topics.",
+          "View ready classes and save a planned activity date or follow-up note."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "C4",
+    "title": "Handover of recurring duties",
+    "problemStatement": "Staff members taking over a recurring school duty struggle to know which steps and contacts still matter when the responsible person changes because instructions are passed on informally and past decisions are hard to find.",
+    "ideas": [
+      {
+        "id": "C4-1",
+        "title": "School Duty Playbook",
+        "appIdea": "A school duty playbook where staff save the steps and contact roles needed to carry out a recurring duty.",
+        "features": [
+          "Create a duty page with instructions, role-based contacts, and material locations.",
+          "Search duties and view the saved steps.",
+          "Record the latest completion date and a note for the next person."
+        ]
+      },
+      {
+        "id": "C4-2",
+        "title": "Recurring Duty Checklist",
+        "appIdea": "A recurring duty checklist where staff copy a short set of steps into a new run and track the handover.",
+        "features": [
+          "Save a duty checklist with the action steps and contact roles.",
+          "Start a dated run and mark each copied step as completed.",
+          "View unfinished steps and add a handover note for that run."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "D1",
+    "title": "Group task progress",
+    "problemStatement": "Teachers running group activities struggle to see which groups need help before time runs out because progress is reported at different moments while the teacher is moving between groups.",
+    "ideas": [
+      {
+        "id": "D1-1",
+        "title": "Group Progress Board",
+        "appIdea": "A group progress board where a teacher records each group’s current activity step and need for help.",
+        "features": [
+          "Create one activity with group labels and up to three task steps.",
+          "Update each group’s current step and help-needed status.",
+          "View all groups on one board and clear a help request after checking in."
+        ]
+      },
+      {
+        "id": "D1-2",
+        "title": "Group Check-in Log",
+        "appIdea": "A group check-in log where short progress updates help a teacher decide which group to visit next.",
+        "features": [
+          "Record a group’s completed work, next step, and question for one activity.",
+          "View the latest check-in from each group and filter unresolved questions.",
+          "Add a teacher response and mark a question as addressed."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "D2",
+    "title": "Shared-device activity turns",
+    "problemStatement": "Teachers using a limited number of computers struggle to give every group a turn during a practical activity because the order and remaining time are tracked informally while the lesson continues.",
+    "ideas": [
+      {
+        "id": "D2-1",
+        "title": "Shared Computer Turn Queue",
+        "appIdea": "A shared computer turn queue where a teacher manages group turns at a limited number of workstations.",
+        "features": [
+          "Create group labels and available workstation labels for one activity.",
+          "Assign the next waiting group to an available workstation.",
+          "Mark a turn as complete and save the start and finish times."
+        ]
+      },
+      {
+        "id": "D2-2",
+        "title": "Device Rotation Planner",
+        "appIdea": "A device rotation planner where a teacher assigns groups to fixed activity slots and records whether each group had its turn.",
+        "features": [
+          "Create a rotation table using group labels, workstations, and fixed lesson slots.",
+          "Assign a group to a workstation slot without duplicate assignments.",
+          "Mark completed turns and view groups that still need a turn."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "D3",
+    "title": "Question queue",
+    "problemStatement": "Teachers leading a busy class struggle to respond to student questions fairly during independent work because several students ask for help at once and the order is easy to lose while teaching.",
+    "ideas": [
+      {
+        "id": "D3-1",
+        "title": "Class Help Queue",
+        "appIdea": "A class help queue where a teacher or shared classroom device records requests in the order they arrive.",
+        "features": [
+          "Add a help request using a sample student or group label and a short question.",
+          "View waiting requests in time order.",
+          "Mark a request as being helped or completed."
+        ]
+      },
+      {
+        "id": "D3-2",
+        "title": "Help Visit Checklist",
+        "appIdea": "A help visit checklist where the teacher marks who needs support and keeps track of the order for classroom visits.",
+        "features": [
+          "Load sample learner or group labels and mark who needs help.",
+          "Add a brief reason and record when a request was made.",
+          "Mark a visit as completed and view the remaining requests in order."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "D4",
+    "title": "Participation over time",
+    "problemStatement": "Teachers who want more students to contribute struggle to notice who has rarely had a chance to speak across several lessons because participation is observed in the moment but not consistently recorded afterward.",
+    "ideas": [
+      {
+        "id": "D4-1",
+        "title": "Participation Opportunity Log",
+        "appIdea": "A teacher-only participation log where lesson-by-lesson records help the teacher notice who has had fewer chances to contribute.",
+        "features": [
+          "Create a dated lesson record using sample learner labels.",
+          "Mark whether each learner was offered a chance and whether they contributed.",
+          "View each learner’s opportunity and contribution counts for a selected date range."
+        ]
+      },
+      {
+        "id": "D4-2",
+        "title": "Contribution Format Planner",
+        "appIdea": "A contribution format planner where a teacher plans different ways for learners to take part and records opportunities across lessons.",
+        "features": [
+          "Record a planned contribution format for sample learners, such as speaking, showing work, or paired sharing.",
+          "Mark which planned opportunities were offered during a lesson.",
+          "View learners without a recorded opportunity and plan the next lesson’s invitations."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "E1",
+    "title": "Assignment collection",
+    "problemStatement": "Teachers collecting work on paper struggle to see which students still need to submit each assignment when several tasks are collected over a week because submission marks are written on separate sheets and are difficult to compare.",
+    "ideas": [
+      {
+        "id": "E1-1",
+        "title": "Assignment Submission Tracker",
+        "appIdea": "An assignment submission tracker where a teacher checks paper submissions and finds missing work across tasks.",
+        "features": [
+          "Create an assignment with a due date and sample learner labels.",
+          "Mark a learner’s assignment as received and save the check date.",
+          "Filter missing submissions by assignment or learner."
+        ]
+      },
+      {
+        "id": "E1-2",
+        "title": "Weekly Collection Desk",
+        "appIdea": "A weekly collection desk where a teacher reviews all due tasks in one checklist and records the next follow-up action.",
+        "features": [
+          "Add tasks due in a selected week with sample learner labels.",
+          "View a learner-by-task checklist and update submission status.",
+          "Record a follow-up date or note for missing work and view pending follow-ups."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "E2",
+    "title": "Common misconceptions",
+    "problemStatement": "Teachers reviewing classwork struggle to identify which questions need to be revisited with the whole class when many students make similar mistakes because observations are scattered across marked papers and informal notes.",
+    "ideas": [
+      {
+        "id": "E2-1",
+        "title": "Misconception Tally",
+        "appIdea": "A misconception tally where a teacher counts recurring errors in classwork and chooses what to reteach.",
+        "features": [
+          "Create a lesson review with questions and manually named misconception categories.",
+          "Enter anonymous counts of each observed misconception.",
+          "View totals by question or misconception and save a reteaching note."
+        ]
+      },
+      {
+        "id": "E2-2",
+        "title": "Classwork Review Cards",
+        "appIdea": "A classwork review card app where a teacher gathers error observations under questions and records what to explain again.",
+        "features": [
+          "Add an anonymous observation with a question label, teacher-chosen tag, and a short description.",
+          "Group saved observations by question or tag and show their counts.",
+          "Mark a group of observations for review and add a follow-up teaching note."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "E3",
+    "title": "Feedback follow-through",
+    "problemStatement": "Teachers who give written feedback struggle to see whether students have acted on a requested revision when work is resubmitted on different days because feedback and revised work are kept in separate piles.",
+    "ideas": [
+      {
+        "id": "E3-1",
+        "title": "Revision Follow-up Tracker",
+        "appIdea": "A revision follow-up tracker where a teacher links a requested change to the student’s resubmission status.",
+        "features": [
+          "Record a revision request for a sample learner and assignment.",
+          "Mark the work as resubmitted and save the date.",
+          "Record the teacher’s check and filter requests still awaiting action."
+        ]
+      },
+      {
+        "id": "E3-2",
+        "title": "Revision Conference Queue",
+        "appIdea": "A revision conference queue where a teacher lists resubmitted work that needs checking alongside the original feedback.",
+        "features": [
+          "Save an assignment’s revision request for a sample learner.",
+          "Add the resubmission to a dated review queue with the original request visible.",
+          "Mark it as checked or needing another revision and save the next action."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "E4",
+    "title": "Learning progress over a term",
+    "problemStatement": "Teachers who assess the same learning skill several times struggle to recognize which students still need practice when planning a follow-up lesson because results from different activities are stored in separate class records.",
+    "ideas": [
+      {
+        "id": "E4-1",
+        "title": "Skill Evidence Tracker",
+        "appIdea": "A skill evidence tracker where a teacher records observations from several activities and reviews a learner’s progress over time.",
+        "features": [
+          "Record a sample learner’s observed level for a skill during a dated activity.",
+          "View the learner’s saved observations for the same skill in date order.",
+          "Add a next-practice note and filter records marked as needing follow-up."
+        ]
+      },
+      {
+        "id": "E4-2",
+        "title": "Follow-up Practice Planner",
+        "appIdea": "A follow-up practice planner where teachers connect a classroom observation to a practice task and a later check.",
+        "features": [
+          "Record a sample learner’s observed difficulty and the related skill.",
+          "Assign a short practice task with a planned check date.",
+          "Save the check result and view open practice plans by skill or date."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "E5",
+    "title": "Exit-ticket patterns",
+    "problemStatement": "Teachers collecting brief reflections at the end of a lesson struggle to decide what to explain again next time because responses arrive on paper or through shared devices and must be sorted before patterns become visible.",
+    "ideas": [
+      {
+        "id": "E5-1",
+        "title": "Exit Ticket Summary",
+        "appIdea": "An exit ticket summary app where a teacher records response counts and reviews which lesson points need another explanation.",
+        "features": [
+          "Create a lesson exit question with up to three fixed response options.",
+          "Enter counts from paper responses or a shared classroom device.",
+          "View option totals and save a plan for the next lesson."
+        ]
+      },
+      {
+        "id": "E5-2",
+        "title": "Reflection Sorting Board",
+        "appIdea": "A reflection sorting board where short anonymous responses are manually grouped so a teacher can plan the next lesson.",
+        "features": [
+          "Add short anonymous responses to one lesson question.",
+          "Assign each response to a teacher-defined category such as clear, unsure, or needs an example.",
+          "View category counts and save a next-lesson teaching note."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "F1",
+    "title": "Attendance follow-up",
+    "problemStatement": "Teachers who follow up on repeated absences struggle to notice which students need a check-in when reviewing several days of attendance because daily marks are kept on separate pages and patterns are not easy to see.",
+    "ideas": [
+      {
+        "id": "F1-1",
+        "title": "Attendance Check-in Tracker",
+        "appIdea": "An attendance check-in tracker where teachers review saved attendance marks and record whether a follow-up has taken place.",
+        "features": [
+          "Record daily attendance for sample learner labels.",
+          "View absence counts within a selected date range.",
+          "Record a teacher check-in date and note for a learner."
+        ]
+      },
+      {
+        "id": "F1-2",
+        "title": "Absence Follow-up Board",
+        "appIdea": "An absence follow-up board where a teacher records absence events and keeps track of the next check-in.",
+        "features": [
+          "Add an absence event for a sample learner with its date.",
+          "View events by learner and mark a planned follow-up date.",
+          "Record that a check-in occurred and filter unresolved follow-ups."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "F2",
+    "title": "Catch-up after absence",
+    "problemStatement": "Teachers helping students return after an absence struggle to coordinate what work still needs to be completed when different subject teachers assign make-up tasks because each teacher keeps a separate record of missed work.",
+    "ideas": [
+      {
+        "id": "F2-1",
+        "title": "Catch-up Task Board",
+        "appIdea": "A catch-up task board where teachers share missed tasks and record what a returning learner has completed.",
+        "features": [
+          "Add a missed task for a sample learner with the subject and teacher label.",
+          "View all open catch-up tasks for the learner in one list.",
+          "Mark a task as completed or checked and add a brief note."
+        ]
+      },
+      {
+        "id": "F2-2",
+        "title": "Return-to-Class Plan",
+        "appIdea": "A return-to-class plan where teachers agree on a short catch-up sequence and review the learner’s progress.",
+        "features": [
+          "Create a dated return plan for a sample learner.",
+          "Add up to three priority catch-up steps with a subject and teacher label.",
+          "Update step completion and record a review note for the whole plan."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "F3",
+    "title": "Student support handover",
+    "problemStatement": "Teachers supporting a student over several weeks struggle to continue agreed classroom support when another teacher takes responsibility because actions tried and next steps are recorded in private notes that are not handed over consistently.",
+    "ideas": [
+      {
+        "id": "F3-1",
+        "title": "Classroom Support Action Log",
+        "appIdea": "A classroom support action log where teachers record agreed classroom actions and what the next teacher should continue.",
+        "features": [
+          "Create a support card for a fictional learner with an agreed classroom action.",
+          "Add dated notes about the action tried and the next step.",
+          "View the latest handover summary and earlier notes for the learner."
+        ]
+      },
+      {
+        "id": "F3-2",
+        "title": "Support Routine Checklist",
+        "appIdea": "A support routine checklist where teachers record whether an agreed classroom support routine was carried out and what needs follow-up.",
+        "features": [
+          "Define up to three classroom support steps for a fictional learner.",
+          "Record a dated completion check and a brief practical note for each step.",
+          "View recent checks and save a handover note about the next action."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "F4",
+    "title": "Family meeting requests",
+    "problemStatement": "Teachers arranging short meetings with families struggle to find a time that has not already been taken when requests arrive through notes, calls, and in-person conversations because availability and confirmations are tracked separately.",
+    "ideas": [
+      {
+        "id": "F4-1",
+        "title": "Family Meeting Slot Planner",
+        "appIdea": "A family meeting slot planner where a teacher records requests and assigns each meeting to an available fixed slot.",
+        "features": [
+          "Create a list of available meeting dates and fixed time slots.",
+          "Assign a sample family label and meeting note to an available slot.",
+          "View the schedule and cancel or move a booking."
+        ]
+      },
+      {
+        "id": "F4-2",
+        "title": "Family Meeting Request Board",
+        "appIdea": "A family meeting request board where a teacher records preferred fixed slots and confirms a workable meeting time.",
+        "features": [
+          "Record a sample family’s request with a preferred and an alternative meeting slot.",
+          "View pending requests alongside already confirmed meetings.",
+          "Confirm one available slot or mark the request as needing another time."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "F5",
+    "title": "Home communication follow-up",
+    "problemStatement": "Teachers who send important messages home struggle to know which families may need another contact attempt when replies come back through different channels because the date, channel, and response status are not recorded together.",
+    "ideas": [
+      {
+        "id": "F5-1",
+        "title": "Home Communication Log",
+        "appIdea": "A home communication log where a teacher records contact attempts and tracks which messages still need a response.",
+        "features": [
+          "Record a message topic, sample family label, date, and contact channel.",
+          "Update whether a response was received and note the next contact date.",
+          "Filter unanswered messages and follow-ups due on a selected date."
+        ]
+      },
+      {
+        "id": "F5-2",
+        "title": "Notice Response Checklist",
+        "appIdea": "A notice response checklist where a teacher checks which sample families have received and responded to one important message.",
+        "features": [
+          "Create a message checklist with sample family labels.",
+          "Record each family’s contact channel, delivery date, and response status.",
+          "View families still needing another attempt and save a follow-up note."
+        ]
+      }
+    ]
+  }
+]

@@ -5,3 +5,5 @@ node_modules
 service-account.json
 .DS_Store
 *.tsbuildinfo
+prework-review.json
+lib/prework-reviews-private.json

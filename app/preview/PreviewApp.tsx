@@ -15,10 +15,19 @@ import ProblemPrdWizard, { type AssistContext, type AssistResult } from '@/app/c
 import { buildPrdMarkdown, emptyPrd, type Prd } from '@/lib/prd';
 import { demoPeople, demoPrework, makeDemoOutcomes } from '@/lib/demo-data';
 import { emptySelfAssessment, validSelfAssessment } from '@/lib/outcome-self-assessment';
+import curatedProblems from '@/lib/curated-app-ideas.json';
+import type { PreworkReview } from '@/lib/prd-suggestions';
 
 type Screen = 'home' | 'prework' | 'practice' | 'prd' | 'share' | 'admin';
 type DemoPost = { id: string; ownerName: string; name?: string; text?: string; guide?: string; url?: string; problem?: string; user?: string; goal?: string; features?: string; design?: string; refinedProblem?: string; focusMoment?: string; desiredAction?: string; appIdea?: string; isExample?: boolean };
 const user = { uid: 'sample-user-1' } as User;
+const demoPrdReview: PreworkReview = {
+  status: 'narrow',
+  feedback: 'Your problem names a real coordination challenge. Keep the first app focused on one shared booking task.',
+  suggestedProblem: curatedProblems[0].problemStatement,
+  caution: '',
+  ideas: curatedProblems[0].ideas,
+};
 const screens: { key: Screen; label: string; icon: Parameters<typeof WorkshopIcon>[0]['name'] }[] = [
   { key: 'home', label: 'Home', icon: 'spark' }, { key: 'prework', label: 'Pre-work', icon: 'assignment' }, { key: 'practice', label: 'Warm-up', icon: 'screen' }, { key: 'prd', label: 'Problem & PRD', icon: 'document' }, { key: 'share', label: 'Final outcomes', icon: 'spark' }, { key: 'admin', label: 'Admin', icon: 'people' },
 ];
@@ -29,6 +38,10 @@ function PreviewTaskEditor({ kind, content, onPublish, onClose }: { kind: 'prewo
   const [note, setNote] = useState('');
   const [prd, setPrd] = useState<Prd>(emptyPrd);
   useEffect(() => { if (kind !== 'prd') return; try { setPrd({ ...emptyPrd, ...JSON.parse(localStorage.getItem('apex-demo-prd-draft') || '{}') }); } catch { /* Ignore invalid demo draft. */ } }, [kind]);
+  function saveDemoPrdDraft(next: Prd) {
+    try { localStorage.setItem('apex-demo-prd-draft', JSON.stringify(next)); return true; }
+    catch { return false; }
+  }
   const [statement, setStatement] = useState('');
   useEffect(() => {
     setStatement(Object.values(parts).some(value => value.trim()) ? `[${parts.who || 'WHO'}] struggle(s) to [${parts.task || 'TASK'}] when [${parts.situation || 'SITUATION'}] because [${parts.rootCause || 'ROOT CAUSE'}].` : '');
@@ -57,7 +70,7 @@ function PreviewTaskEditor({ kind, content, onPublish, onClose }: { kind: 'prewo
       { appIdea: 'An equipment request app that helps teachers request shared resources and track their status.', rationale: 'It makes equipment requests visible to both teachers and the staff who coordinate them.', usageMode: 'School staff use' },
     ] };
   }
-  if (kind === 'prd') return <section className="preview-content preview-task-editor"><ProblemPrdWizard value={prd} onChange={setPrd} prework={demoPrework[0]?.text || ''} who="Teachers who share school spaces and equipment" onSaveDraft={next => { try { localStorage.setItem('apex-demo-prd-draft', JSON.stringify(next)); return true; } catch { return false; } }} onPublish={publish} onDownload={() => { const markdown = buildPrdMarkdown(prd, demoPrework[0]?.text || ''); const url = URL.createObjectURL(new Blob([markdown], { type: 'text/markdown' })); const anchor = document.createElement('a'); anchor.href = url; anchor.download = 'apex-dev-demo-prd.md'; anchor.click(); URL.revokeObjectURL(url); }} onAssist={assistDemo} demoIdeas={process.env.NODE_ENV !== 'development'} published={false}/><div className="preview-editor-actions"><button className="secondary" onClick={onClose}>← Back to posts</button></div></section>;
+  if (kind === 'prd') return <section className="preview-content preview-task-editor"><ProblemPrdWizard value={prd} onChange={next => { setPrd(next); saveDemoPrdDraft(next); }} prework={demoPrework[0]?.text || ''} review={demoPrdReview} who="Teachers who share school spaces and equipment" onSaveDraft={saveDemoPrdDraft} onPublish={publish} onDownload={() => { const markdown = buildPrdMarkdown(prd, demoPrework[0]?.text || ''); const url = URL.createObjectURL(new Blob([markdown], { type: 'text/markdown' })); const anchor = document.createElement('a'); anchor.href = url; anchor.download = 'apex-dev-demo-prd.md'; anchor.click(); URL.revokeObjectURL(url); }} onAssist={assistDemo} demoIdeas={process.env.NODE_ENV !== 'development'} published={false}/><div className="preview-editor-actions"><button className="secondary" onClick={onClose}>← Back to posts</button></div></section>;
   return <section className="preview-content preview-task-editor"><div className="preview-task-response preview-warmup-editor"><span className="eyebrow">STEP 01 · YOUR CONTRIBUTION</span><h2>Share your warm-up link</h2><label htmlFor="preview-warmup-link">Result link</label><input id="preview-warmup-link" type="url" placeholder="https://..." value={link} onChange={event => setLink(event.target.value)}/><label htmlFor="preview-warmup-note">Note <span className="optional">optional</span></label><input id="preview-warmup-note" placeholder="What did you try or change?" value={note} onChange={event => setNote(event.target.value)}/><div><button className="secondary" onClick={onClose}>← Back</button><button disabled={!link.trim()} onClick={publish}>Publish post →</button></div></div></section>;
 }
 
