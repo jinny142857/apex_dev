@@ -22,7 +22,7 @@ function hostname(value?: string) {
   catch { return 'Shared work'; }
 }
 
-export function PresentationMode({ items, initialIndex = 0, title, currentUser, displayName, isAdmin = false, onClose, scoring, representativePick, demo = false, solo = false, active = true, preloadAll = false }: { items: PresentationItem[]; initialIndex?: number; title: string; currentUser: User; displayName: string; isAdmin?: boolean; onClose: () => void; scoring?: ScoreControls; representativePick?: RepresentativePick; demo?: boolean; solo?: boolean; active?: boolean; preloadAll?: boolean }) {
+export function PresentationMode({ items, initialIndex = 0, title, currentUser, displayName, isAdmin = false, onClose, scoring, representativePick, demo = false, solo = false, embedded = false, active = true, preloadAll = false }: { items: PresentationItem[]; initialIndex?: number; title: string; currentUser: User; displayName: string; isAdmin?: boolean; onClose: () => void; scoring?: ScoreControls; representativePick?: RepresentativePick; demo?: boolean; solo?: boolean; embedded?: boolean; active?: boolean; preloadAll?: boolean }) {
   const { tr } = useLanguage();
   const [index, setIndex] = useState(Math.min(initialIndex, Math.max(items.length - 1, 0)));
   const [comments, setComments] = useState<{ id: string; text?: string; authorName?: string; authorId?: string }[]>([]);
@@ -33,6 +33,7 @@ export function PresentationMode({ items, initialIndex = 0, title, currentUser, 
   const [ratingOpen, setRatingOpen] = useState(false);
   const [railCollapsed, setRailCollapsed] = useState(false);
   const [commentsOpen, setCommentsOpen] = useState(false);
+  const [presentationView, setPresentationView] = useState(false);
   const [minimized, setMinimized] = useState(false);
   const [maximized, setMaximized] = useState(false);
   const [readyFrames, setReadyFrames] = useState<Record<string, boolean>>({});
@@ -47,23 +48,23 @@ export function PresentationMode({ items, initialIndex = 0, title, currentUser, 
   const canRate = !!scoring && !scoring.submitted && !scoring.closed && !!item?.scoreId;
   const rated = canRate && scoring.rubric.every(criterion => scoring.values[item.scoreId!]?.[criterion.id] !== undefined && scoring.values[item.scoreId!]?.[criterion.id] !== '');
   const scoreTargets = items.filter(entry => entry.scoreId);
-  const showSidebar = Boolean(scoring || representativePick || commentsOpen);
+  const showSidebar = Boolean(scoring || representativePick || commentsOpen || solo);
   const readyToSubmit = !!scoring && scoreTargets.length > 0 && scoreTargets.every(entry => scoring.rubric.every(criterion => scoring.values[entry.scoreId!]?.[criterion.id] !== undefined && scoring.values[entry.scoreId!]?.[criterion.id] !== ''));
 
   useEffect(() => {
-    if (!active) return;
+    if (!active || (embedded && !presentationView)) return;
     const previous = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
     closeRef.current?.focus();
     return () => { document.body.style.overflow = previous; };
-  }, [active]);
+  }, [active, embedded, presentationView]);
   useEffect(() => {
     if (active) setIndex(Math.min(initialIndex, Math.max(items.length - 1, 0)));
   }, [active, initialIndex, items.length]);
   useEffect(() => {
     if (!active) return;
     const keydown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') { if (ratingOpen) setRatingOpen(false); else onClose(); }
+      if (event.key === 'Escape') { if (ratingOpen) setRatingOpen(false); else if (embedded && presentationView) setPresentationView(false); else if (!embedded) onClose(); }
       if (ratingOpen) return;
       if (event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) return;
       if (event.key === 'ArrowRight') setIndex(current => Math.min(current + 1, items.length - 1));
@@ -71,7 +72,7 @@ export function PresentationMode({ items, initialIndex = 0, title, currentUser, 
     };
     window.addEventListener('keydown', keydown);
     return () => window.removeEventListener('keydown', keydown);
-  }, [active, items.length, onClose, ratingOpen]);
+  }, [active, embedded, presentationView, items.length, onClose, ratingOpen]);
   useEffect(() => {
     if (!active || !url || frameReady) return;
     const timeout = window.setTimeout(() => setStalledFrame(previewKey), 12000);
@@ -116,8 +117,8 @@ export function PresentationMode({ items, initialIndex = 0, title, currentUser, 
   }
 
   if (!post) return null;
-  return <div ref={shellRef} className={`presentation-shell ${solo ? 'presentation-solo' : ''} ${minimized ? 'presentation-minimized' : ''} ${maximized ? 'presentation-maximized' : ''} ${!active ? 'presentation-preloading' : ''}`} role={active ? 'dialog' : undefined} aria-modal={active ? true : undefined} aria-label={active ? title : undefined} aria-hidden={!active} inert={!active}>
-    <header className="presentation-topbar"><div className="presentation-window-title"><span className="presentation-kicker">APEX DEV · PRESENTATION MODE</span><h2>{title}</h2></div><div className="presentation-top-actions">{solo && <button className="secondary" onClick={onClose}>← {tr('Back to works')}</button>}{!solo && <button className="secondary presentation-rail-toggle" onClick={() => setRailCollapsed(value => !value)} aria-expanded={!railCollapsed}>{tr(railCollapsed ? 'Show works' : 'Hide works')}</button>}{!scoring && !representativePick && <button type="button" className="secondary presentation-comments-toggle" onClick={() => setCommentsOpen(open => !open)} aria-controls={commentsOpen ? 'presentation-comments-panel' : undefined} aria-expanded={commentsOpen}>{commentsOpen ? tr('Hide comments') : `${tr('Comments')} (${comments.length})`}</button>}<span>{index + 1} / {items.length}</span></div></header>
+  return <div ref={shellRef} className={`presentation-shell ${solo ? 'presentation-solo' : ''} ${embedded ? 'presentation-embedded' : ''} ${presentationView ? 'presentation-stage-view' : ''} ${minimized ? 'presentation-minimized' : ''} ${maximized ? 'presentation-maximized' : ''} ${!active ? 'presentation-preloading' : ''}`} role={active && (!embedded || presentationView) ? 'dialog' : undefined} aria-modal={active && (!embedded || presentationView) ? true : undefined} aria-label={active && (!embedded || presentationView) ? title : undefined} aria-hidden={!active} inert={!active}>
+    <header className="presentation-topbar"><div className="presentation-window-title"><span className="presentation-kicker">APEX DEV · {tr(embedded && !presentationView ? 'Individual outcome' : 'Presentation mode')}</span><h2>{tr(title)}</h2></div><div className="presentation-top-actions">{solo && <button className="secondary" onClick={presentationView ? () => setPresentationView(false) : onClose}>← {tr(presentationView ? 'Back to work' : 'Back to works')}</button>}{embedded && <button type="button" className="presentation-mode-button" onClick={() => setPresentationView(value => !value)} aria-pressed={presentationView}>{tr(presentationView ? 'Exit presentation' : 'Presentation mode')} {presentationView ? '↙' : '↗'}</button>}{!solo && <button className="secondary presentation-rail-toggle" onClick={() => setRailCollapsed(value => !value)} aria-expanded={!railCollapsed}>{tr(railCollapsed ? 'Show works' : 'Hide works')}</button>}{!solo && !scoring && !representativePick && <button type="button" className="secondary presentation-comments-toggle" onClick={() => setCommentsOpen(open => !open)} aria-controls={commentsOpen ? 'presentation-comments-panel' : undefined} aria-expanded={commentsOpen}>{commentsOpen ? tr('Hide comments') : `${tr('Comments')} (${comments.length})`}</button>}<span>{index + 1} / {items.length}</span></div></header>
     <div className={`presentation-layout ${railCollapsed || solo ? "rail-collapsed" : ""} ${showSidebar ? '' : 'comments-collapsed'}`}>
       {!solo && <aside className="presentation-rail" aria-label="Choose a work" hidden={railCollapsed}>{items.map((entry, position) => <button key={entry.post.id} className={`presentation-thumbnail ${position === index ? 'selected' : ''}`} onClick={() => setIndex(position)}><span className="presentation-thumb-art" aria-hidden="true">{String(position + 1).padStart(2, "0")}</span><span>{entry.label || `Work ${position + 1}`}</span><strong>{entry.post.name || 'Untitled outcome'}</strong><small>{entry.post.ownerName || 'Participant'}</small></button>)}</aside>}
       <section className="presentation-main"><div className="presentation-browser">
@@ -169,10 +170,12 @@ export type TeamPick = { team: string; assignments: Record<string, string>; ownR
 export default function OutcomeShowcase({ posts, currentUser, displayName, isAdmin, onEdit, onDelete, onNewPost, demo = false }: { posts: OutcomePost[]; currentUser: User; displayName: string; isAdmin: boolean; onEdit: (post: OutcomePost) => void; onDelete: (post: OutcomePost) => void; onNewPost: () => void; demo?: boolean }) {
   const { tr } = useLanguage();
   const [start, setStart] = useState<number | null>(null);
+  const boardRef = useRef<HTMLElement>(null);
   const items = posts.map(post => ({ post }));
-  return <section className="outcome-board">
+  useEffect(() => { if (start !== null) boardRef.current?.scrollIntoView({ block: 'start' }); }, [start]);
+  return <section ref={boardRef} className="outcome-board">
     <div className="outcome-board-heading"><div><h3>Individual outcomes <span>{posts.length}</span></h3></div>{demo && <div className="outcome-toolbar-actions"><button className="secondary" onClick={onNewPost}>＋ Submit work</button></div>}</div>
-    {posts.length ? <div className="outcome-gallery">{posts.map((post, index) => <article className={`outcome-tile outcome-tile-${index % 4}`} key={post.id}><OutcomeThumbnail post={post} index={index} onOpen={() => setStart(index)}/><div className="outcome-tile-body"><h4>{post.name || 'Untitled outcome'}</h4><p>{post.features || post.problem || 'Explore this shared work.'}</p><div className="outcome-tile-footer"><span>By {post.ownerName || 'Participant'}</span><LikeCount postId={post.id} demo={demo} demoCount={post.demoLikes?.length}/><button className="outcome-view-work" onClick={() => setStart(index)}>View work →</button></div>{(isAdmin || post.ownerId === currentUser.uid) && <div className="outcome-tile-tools">{post.ownerId === currentUser.uid && <a className="secondary outcome-pdf-button" href={`/outcome-report?post=${encodeURIComponent(post.id)}${demo ? '&demo=1' : ''}`} target="_blank" rel="noopener noreferrer">{tr('View report')} ↗</a>}<button className="inline-link" onClick={() => onEdit(post)}>Edit</button><button className="inline-link" onClick={() => onDelete(post)}>Remove</button></div>}</div></article>)}</div> : <div className="empty-state"><span aria-hidden="true">✳</span><h4>No outcomes yet</h4><p>Be the first to share your final work.</p></div>}
-    {(demo || start !== null) && posts.length > 0 && <PresentationMode items={items} initialIndex={start ?? 0} title="Individual outcomes" currentUser={currentUser} displayName={displayName} isAdmin={isAdmin} demo={demo} solo active={start !== null} preloadAll={demo} onClose={() => setStart(null)}/>}
+    {start !== null && posts.length > 0 ? <PresentationMode items={items} initialIndex={start} title="Individual outcomes" currentUser={currentUser} displayName={displayName} isAdmin={isAdmin} demo={demo} solo embedded onClose={() => setStart(null)}/>
+      : posts.length ? <div className="outcome-gallery">{posts.map((post, index) => <article className={`outcome-tile outcome-tile-${index % 4}`} key={post.id}><OutcomeThumbnail post={post} index={index} onOpen={() => setStart(index)}/><div className="outcome-tile-body"><h4>{post.name || 'Untitled outcome'}</h4><p>{post.features || post.problem || 'Explore this shared work.'}</p><div className="outcome-tile-footer"><span>By {post.ownerName || 'Participant'}</span><LikeCount postId={post.id} demo={demo} demoCount={post.demoLikes?.length}/><button className="outcome-view-work" onClick={() => setStart(index)}>View work →</button></div>{(isAdmin || post.ownerId === currentUser.uid) && <div className="outcome-tile-tools">{post.ownerId === currentUser.uid && <a className="secondary outcome-pdf-button" href={`/outcome-report?post=${encodeURIComponent(post.id)}${demo ? '&demo=1' : ''}`} target="_blank" rel="noopener noreferrer">{tr('View report')} ↗</a>}<button className="inline-link" onClick={() => onEdit(post)}>Edit</button><button className="inline-link" onClick={() => onDelete(post)}>Remove</button></div>}</div></article>)}</div> : <div className="empty-state"><span aria-hidden="true">✳</span><h4>No outcomes yet</h4><p>Be the first to share your final work.</p></div>}
   </section>;
 }

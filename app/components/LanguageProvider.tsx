@@ -167,7 +167,7 @@ const translations: Record<string, string> = {
   'Admin view': '관리자 화면', 'Team sharing': '대표작 선택', 'Representative selection': '대표작 선택', 'Final pitches': '최종 발표',
   'Award ceremony': '시상식', 'Presentation order': '발표 순서', 'Draw random order': '발표 순서 추첨',
   'Start presentation': '발표 시작', 'Try award ceremony': '시상식 체험',
-  'Submit work': '산출물 제출', 'Presentation mode': '발표 모드', 'Individual outcomes': '개별 산출물',
+  'Submit work': '산출물 제출', 'Presentation mode': '발표 모드', 'Exit presentation': '발표 모드 종료', 'Back to work': '산출물로 돌아가기', 'Back to works': '산출물 목록으로', 'Individual outcome': '개별 산출물', 'Individual outcomes': '개별 산출물',
   'Comments': '댓글', 'Hide comments': '댓글 접기', 'Add a comment': '댓글 남기기', 'Post comment': '댓글 등록',
   'Your evaluation': '내 평가', 'Evaluate pitch': '발표 평가하기', 'Edit review': '평가 수정',
   'Submit all scores': '평가 제출', 'Show works': '작품 목록 보기', 'Hide works': '작품 목록 접기',

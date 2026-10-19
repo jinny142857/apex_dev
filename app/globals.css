@@ -1030,6 +1030,17 @@ input:focus,textarea:focus,select:focus{border-color:#8e9cda;box-shadow:0 0 0 4p
 @media(max-width:700px){.prd-flow-recap button{grid-template-columns:1fr auto;gap:4px 8px}.prd-flow-recap strong{grid-column:1/-1;grid-row:2}.prd-flow-ideas,.prd-flow-review,.prd-prepared-grid{grid-template-columns:1fr}.prd-flow-review>div:first-child,.prd-flow-review>div:nth-child(3),.prd-flow-review>div:nth-child(4){grid-column:auto}.prd-flow-current{padding:20px}.prd-flow-suggestion{align-items:flex-start;flex-direction:column}}
 
 .prd-autosave-hint{margin:10px 0 0;color:#688077;font-size:.72rem;font-weight:700}
+
+/* Individual work opens inside the normal page; only the explicit button enters presentation mode. */
+.presentation-embedded{position:relative;inset:auto;z-index:auto;height:min(820px,calc(100vh - 130px));min-height:610px;overflow:hidden;border:1px solid #e7dbce;border-radius:19px;box-shadow:0 14px 38px #69554216}
+.presentation-embedded.presentation-stage-view{position:fixed;inset:0;z-index:1000;width:auto;height:auto;min-height:0;border:0;border-radius:0;box-shadow:none}
+.presentation-embedded .presentation-window-controls{display:none}
+.presentation-embedded .presentation-layout,.presentation-embedded .presentation-layout.rail-collapsed{grid-template-columns:minmax(0,1fr) 300px}
+.presentation-embedded .presentation-main{padding-left:57px;padding-right:57px}
+.presentation-mode-button{border-radius:9px;background:#204d83;color:#fff;font-weight:800;white-space:nowrap}
+.presentation-mode-button:hover{background:#163e70}
+@media(max-width:1050px){.presentation-embedded .presentation-layout,.presentation-embedded .presentation-layout.rail-collapsed{display:grid;grid-template-columns:minmax(0,1fr) 270px}}
+@media(max-width:790px){.presentation-embedded{height:auto;min-height:0;overflow:visible}.presentation-embedded .presentation-layout,.presentation-embedded .presentation-layout.rail-collapsed{display:flex;flex-direction:column}.presentation-embedded .presentation-main{padding-left:15px;padding-right:15px}.presentation-embedded .presentation-sidebar{min-height:320px}.presentation-embedded.presentation-stage-view{height:100vh;overflow:auto}.presentation-embedded.presentation-stage-view .presentation-sidebar{min-height:320px}}
 .preview-editor-toolbar{display:flex;justify-content:flex-end;margin:0 0 12px}
 .outcome-tile-preview{height:150px}
 .outcome-tile-preview::after{display:none}

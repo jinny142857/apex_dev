@@ -2,7 +2,7 @@
 body.standalone-report{margin:0}
 .outcome-report{min-height:100vh;background:#fff;color:#263453;font:14px/1.65 -apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Noto Sans KR",Arial,sans-serif}
 .outcome-report *{box-sizing:border-box}
-.outcome-report .toolbar{position:sticky;top:0;display:flex;align-items:center;justify-content:space-between;gap:16px;padding:14px 24px;background:#253d74;color:#fff}
+.outcome-report .toolbar{position:sticky;top:0;z-index:10;display:flex;align-items:center;justify-content:space-between;gap:16px;padding:14px 24px;background:#253d74;color:#fff}
 .outcome-report .toolbar button{padding:10px 18px;border:0;border-radius:8px;background:#fff;color:#253d74;font:inherit;font-weight:700;cursor:pointer}
 .outcome-report .toolbar button:disabled{opacity:.7;cursor:wait}
 .outcome-report .toolbar-actions{display:flex;gap:10px;flex-wrap:wrap}
