@@ -27,6 +27,21 @@ type Props = {
 };
 
 const sections = ['Your problem & User', 'App idea', 'Core features', 'Design requirements', 'Review & download'];
+const stepLabels = ['Problem', 'App idea', 'Core features', 'Design', 'Review'];
+const activityTitles = [
+  'Refine your problem definition',
+  'Describe your web app idea',
+  'Choose the core features',
+  'Add design requirements',
+  'Review and download your PRD',
+];
+const activityDescriptions = [
+  'Check your Pre-work feedback, clarify the problem, and choose who will use the app.',
+  'Describe one useful task the web app could help those users complete.',
+  'List the essential actions users should be able to take.',
+  'Add only the visual or accessibility requirements your app needs.',
+  'Check the complete plan, then download or publish it.',
+];
 const userOptions = ['Teacher', 'Student', 'Parent', 'School staff', 'Other'];
 function inferUser(who: string) {
   const text = who.toLowerCase().trim();
@@ -156,14 +171,13 @@ export default function ProblemPrdWizard({ value, onChange, prework, review, who
     setStatus(onSaveDraft(next) ? tr('Suggested features added. You can edit them.') : tr('Could not save this draft. Please try again.'));
   }
   return <section className="editor-panel prd-flow">
-    <div className="panel-heading"><div><p className="eyebrow">STEP 02 · YOUR CONTRIBUTION</p><h3>{tr('From problem to PRD')}</h3><p className="panel-subtitle">{tr('Move from a clear problem to a small app you can build.')}</p></div><span className="privacy-pill">{published ? tr('Published · editing') : tr('Private draft')}</span></div>
+    <div className="panel-heading"><div><p className="eyebrow">STEP 01 · YOUR CONTRIBUTION</p><h3>{tr('From problem to PRD')}</h3><p className="panel-subtitle">{tr('Move from a clear problem to a small app you can build.')}</p></div><span className="privacy-pill">{published ? tr('Published · editing') : tr('Private draft')}</span></div>
+    <ol className="prd-phase-path" aria-label={tr('PRD writing stages')}>{stepLabels.map((item, index) => <li key={item} className={index === section ? 'is-current' : index < section ? 'is-complete' : ''}><button type="button" disabled={index > section} onClick={() => revisit(index)} aria-current={index === section ? 'step' : undefined} aria-label={`${String(index + 1).padStart(2, '0')} ${tr(activityTitles[index])}`}><span className="prd-phase-number" aria-hidden="true">{index < section ? '✓' : String(index + 1).padStart(2, '0')}</span><span className="prd-phase-copy"><strong>{tr(item)}</strong></span></button></li>)}</ol>
     <div className="prd-flow-meter" aria-label={tr('PRD progress')}><div className="prd-flow-meter-head"><strong>{tr(sections[section])}</strong><span>{section + 1} / {sections.length}</span></div><div className="prd-flow-track"><span style={{ width: `${((section + 1) / sections.length) * 100}%` }}/></div></div>
-    {section > 0 && <div className="prd-flow-recap">{sections.slice(0, section).map((label, index) => <button type="button" key={label} onClick={() => revisit(index)}><span>✓ {tr(label)}</span><strong>{index === 0 ? problem : index === 1 ? value.appIdea : index === 2 ? features.join('; ') : value.design || tr('Not specified')}</strong><small>{tr('Edit')} ↗</small></button>)}</div>}
     <div className="prd-flow-current">
+      <div className="prd-current-activity"><span>{tr('NOW WORKING ON')} · {String(section + 1).padStart(2, '0')} / 05</span><h4>{tr(activityTitles[section])}</h4><p>{tr(activityDescriptions[section])}</p></div>
       {section === 0 && <>
         <span className="eyebrow">01 · {tr('Your problem & User')}</span>
-        <h4>{tr('Check the problem you brought from Pre-work.')}</h4>
-        <p>{tr('Change it only if a clearer version will help you design the app.')}</p>
         <div className="prd-problem-label-row">
           <label htmlFor="flow-problem">{tr('Your problem')}</label>
           <button type="button" className="prd-reference-trigger" onClick={() => setReferencesOpen(true)}><span className="prd-reference-trigger-icon" aria-hidden="true">✦</span><span className="prd-reference-trigger-copy"><strong>{tr('Browse references')}</strong><small>{tr('28 problems · 6 topics')}</small></span><span className="prd-reference-trigger-arrow" aria-hidden="true">→</span></button>
@@ -184,8 +198,6 @@ export default function ProblemPrdWizard({ value, onChange, prework, review, who
       </>}
       {section === 1 && <>
         <span className="eyebrow">02 · {tr('App idea')}</span>
-        <h4>{tr('What could a web app help your users do?')}</h4>
-        <p>{tr('Choose one task. Think: see, organize, share, or do.')}</p>
         <textarea id="flow-idea" aria-label={tr('App idea')} value={value.appIdea} onChange={event => update('appIdea', event.target.value)} placeholder={tr('A simple app that helps teachers organize consent forms.')}/>
         <div className="prd-prepared-actions">
           {preparedIdeas.length > 0 ? <button type="button" className="prd-prepared-button" aria-expanded={preparedIdeasOpen} onClick={() => setPreparedIdeasOpen(open => !open)}>✦ {tr(preparedIdeasOpen ? 'Hide prepared ideas' : 'See prepared ideas')} <span>{preparedIdeas.length}</span></button>
