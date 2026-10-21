@@ -5,6 +5,7 @@ export type OutcomeReport = {
   name: string;
   ownerName: string;
   url?: string;
+  previewImage?: string;
   problem?: string;
   features?: string;
   guide?: string;
@@ -57,12 +58,15 @@ export function buildOutcomeReportHtml(report: OutcomeReport) {
   const assessmentContent = validSelfAssessment(assessment)
     ? `<div class="report-field self-assessment-report"><h3>Self-check · 1–5</h3><div class="self-assessment-report-grid">${selfAssessmentItems.map(({ key, title }) => `<div><span>${escapeHtml(title)}</span><strong>${assessment[key]} / 5</strong></div>`).join('')}</div></div>`
     : '';
+  const screenshot = report.previewImage && report.previewImage.length <= 420_000 && /^data:image\/jpeg;base64,[A-Za-z0-9+/=]+$/.test(report.previewImage)
+    ? `<div class="report-field outcome-screenshot"><h3>First screen</h3><img src="${report.previewImage}" alt="First screen of ${title}"/></div>`
+    : '';
   return `<main class="sheet"><div class="eyebrow">APEX DEV · Final outcome</div><h1>${title}</h1><p class="meta">By ${escapeHtml(report.ownerName || 'Participant')} · ${escapeHtml(new Date().toLocaleDateString('en-CA'))}</p>
     <div class="journey-heading"><span>THE JOURNEY</span><h3>From a school challenge to a web app</h3></div>
     <div class="journey">
       ${journeyStep('01', 'DEFINE', 'Problem definition', `<p class="problem-statement">${paragraph(problem || 'Problem definition not recorded.')}</p>`)}
       ${journeyStep('02', 'PLAN', 'Product requirements document', prdContent || `<p class="empty-prd">${escapeHtml(missingPrd)}</p>`)}
-      ${journeyStep('03', 'BUILD & SHARE', 'Final outcome', outcomeContent + assessmentContent)}
+      ${journeyStep('03', 'BUILD & SHARE', 'Final outcome', outcomeContent + screenshot + assessmentContent)}
     </div>
     </main>`;
 }
@@ -71,4 +75,11 @@ export function buildStandaloneOutcomeHtml(report: OutcomeReport, css: string) {
   // Keep exported reports self-contained. Escape the closing tag so CSS cannot end the style element.
   const safeCss = css.replace(/<\/style/gi, '<\\/style');
   return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>${escapeHtml(report.name || 'Final outcome')} · APEX DEV</title><style>${safeCss}</style></head><body class="standalone-report"><div class="outcome-report"><div class="toolbar"><span>APEX DEV · Final outcome report<small>Use your browser’s PDF destination in the print window.</small></span><button type="button" onclick="window.print()">Save as PDF</button></div>${buildOutcomeReportHtml(report)}</div></body></html>`;
+}
+
+export function buildStandaloneOutcomeCollectionHtml(reports: OutcomeReport[], css: string) {
+  const safeCss = css.replace(/<\/style/gi, '<\\/style');
+  const pageBreakCss = '@media print{.outcome-report .sheet+.sheet{break-before:page;page-break-before:always}}';
+  const reportPages = reports.map(report => buildOutcomeReportHtml(report)).join('');
+  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>APEX DEV · All participant reports</title><style>${safeCss}${pageBreakCss}</style></head><body class="standalone-report"><div class="outcome-report"><div class="toolbar"><span>APEX DEV · All participant reports<small>${reports.length} final outcome reports · Choose “Save as PDF” to save one combined file.</small></span><button type="button" onclick="window.print()">Save as PDF</button></div>${reportPages}</div></body></html>`;
 }

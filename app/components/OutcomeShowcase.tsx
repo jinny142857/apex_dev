@@ -8,7 +8,7 @@ import type { Criterion, ReviewFeedback } from '@/lib/evaluation';
 import ReviewDialog from '@/app/components/ReviewDialog';
 import { useLanguage } from '@/app/components/LanguageProvider';
 
-export type OutcomePost = { id: string; ownerId: string; ownerName?: string; name?: string; url?: string; problem?: string; features?: string; guide?: string; selfAssessment?: import('@/lib/outcome-self-assessment').OutcomeSelfAssessment; selfAssessmentScale?: number; demoComments?: { id: string; text: string; authorName: string; authorId: string }[]; demoLikes?: string[] };
+export type OutcomePost = { id: string; ownerId: string; ownerName?: string; name?: string; url?: string; problem?: string; features?: string; guide?: string; previewImage?: string; selfAssessment?: import('@/lib/outcome-self-assessment').OutcomeSelfAssessment; selfAssessmentScale?: number; demoComments?: { id: string; text: string; authorName: string; authorId: string }[]; demoLikes?: string[] };
 export type PresentationItem = { post: OutcomePost; label?: string; scoreId?: string };
 type ScoreControls = { rubric: Criterion[]; values: Record<string, Record<string, string>>; feedback: Record<string, ReviewFeedback>; onChange: (id: string, criterionId: string, value: string) => void; onFeedback: (id: string, field: keyof ReviewFeedback, value: string) => void; onSubmit: () => void; submitted: boolean; closed: boolean; busy: boolean; error?: string };
 type RepresentativePick = { ownRepresentativeId?: string; onPick: (postId: string) => void; busy?: boolean };
@@ -20,6 +20,9 @@ function safeUrl(value?: string) {
 function hostname(value?: string) {
   try { return new URL(value || '').hostname.replace(/^www\./, ''); }
   catch { return 'Shared work'; }
+}
+function safePreviewImage(value?: string) {
+  return value && value.length <= 420_000 && /^data:image\/jpeg;base64,[A-Za-z0-9+/=]+$/.test(value) ? value : '';
 }
 
 export function PresentationMode({ items, initialIndex = 0, title, currentUser, displayName, isAdmin = false, onClose, scoring, representativePick, demo = false, solo = false, embedded = false, active = true, preloadAll = false }: { items: PresentationItem[]; initialIndex?: number; title: string; currentUser: User; displayName: string; isAdmin?: boolean; onClose: () => void; scoring?: ScoreControls; representativePick?: RepresentativePick; demo?: boolean; solo?: boolean; embedded?: boolean; active?: boolean; preloadAll?: boolean }) {
@@ -37,12 +40,14 @@ export function PresentationMode({ items, initialIndex = 0, title, currentUser, 
   const [minimized, setMinimized] = useState(false);
   const [maximized, setMaximized] = useState(false);
   const [readyFrames, setReadyFrames] = useState<Record<string, boolean>>({});
+  const [showScreenshot, setShowScreenshot] = useState(false);
   const [stalledFrame, setStalledFrame] = useState('');
   const shellRef = useRef<HTMLDivElement>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
   const item = items[index];
   const post = item?.post;
   const url = safeUrl(post?.url);
+  const screenshot = safePreviewImage(post?.previewImage);
   const previewKey = `${post?.id || ''}:${url}`;
   const frameReady = !!readyFrames[previewKey];
   const canRate = !!scoring && !scoring.submitted && !scoring.closed && !!item?.scoreId;
@@ -61,6 +66,7 @@ export function PresentationMode({ items, initialIndex = 0, title, currentUser, 
   useEffect(() => {
     if (active) setIndex(Math.min(initialIndex, Math.max(items.length - 1, 0)));
   }, [active, initialIndex, items.length]);
+  useEffect(() => { setShowScreenshot(false); }, [index]);
   useEffect(() => {
     if (!active) return;
     const keydown = (event: KeyboardEvent) => {
@@ -129,9 +135,9 @@ export function PresentationMode({ items, initialIndex = 0, title, currentUser, 
               <button className="window-dot window-maximize" onClick={() => { if (document.fullscreenElement) { void document.exitFullscreen(); setMaximized(false); } else { void shellRef.current?.requestFullscreen?.().then(() => setMaximized(true)).catch(() => setMaximized(true)); } }} title={tr('Maximize window')} aria-label={tr('Maximize window')}>↗</button>
             </span>
             <span className="presentation-browser-title">{post.name || 'Live preview'}</span>
-            {url && <a className="presentation-open-site" href={url} target="_blank" rel="noreferrer">Open site ↗</a>}
+            {screenshot && <button type="button" className="presentation-show-screenshot" onClick={() => setShowScreenshot(value => !value)} aria-pressed={showScreenshot}>{showScreenshot ? 'View live app' : 'View first screen'}</button>}{url && <a className="presentation-open-site" href={url} target="_blank" rel="noopener noreferrer">Open site ↗</a>}
           </div>
-          {url ? <div className="presentation-frame-stage">
+          {showScreenshot && screenshot ? <div className="presentation-frame-stage presentation-screenshot-stage"><img src={screenshot} alt={`First screen of ${post.name || 'shared work'}`}/></div> : url ? <div className="presentation-frame-stage">
             {(preloadAll ? items : [item]).map(entry => { const frameUrl = safeUrl(entry.post.url); const frameKey = `${entry.post.id}:${frameUrl}`; return frameUrl && <iframe key={frameKey} className={`${frameKey === previewKey ? 'is-active' : ''} ${!readyFrames[frameKey] ? 'is-loading' : ''}`} src={frameUrl} title={`Preview of ${entry.post.name || 'outcome'}`} loading="eager" sandbox={demo ? undefined : 'allow-forms allow-scripts allow-same-origin allow-popups'} referrerPolicy="strict-origin-when-cross-origin" allowFullScreen onLoad={() => setReadyFrames(previous => ({ ...previous, [frameKey]: true }))}/>; })}
             {!frameReady && <div className="presentation-frame-pending" role="status"><span aria-hidden="true">✦</span><strong>{post.name || 'Live preview'}</strong><small>{stalledFrame === previewKey ? 'This site is not responding inside the preview.' : 'Opening site…'}</small></div>}
           </div> : <div className="presentation-no-preview"><span aria-hidden="true">✳</span><h3>{post.name || 'Shared outcome'}</h3><p>{post.features || post.problem || 'This work has no website link.'}</p></div>}
@@ -155,11 +161,12 @@ function LikeCount({ postId, demo, demoCount = 0 }: { postId: string; demo?: boo
 
 function OutcomeThumbnail({ post, index, onOpen }: { post: OutcomePost; index: number; onOpen: () => void }) {
   const url = safeUrl(post.url);
+  const screenshot = safePreviewImage(post.previewImage);
   const [loadedUrl, setLoadedUrl] = useState('');
   const [failedUrl, setFailedUrl] = useState('');
   return <div className="outcome-tile-preview">
     <span className="outcome-tile-art" aria-hidden="true"><b>{String(index + 1).padStart(2, '0')}</b><i>{(post.name || 'W').slice(0, 1)}</i></span>
-    {url && failedUrl !== url && <iframe className={`outcome-tile-frame ${loadedUrl === url ? 'is-ready' : ''}`} src={url} title={`Home screen of ${post.name || 'shared work'}`} loading="lazy" tabIndex={-1} aria-hidden="true" sandbox="allow-forms allow-scripts allow-same-origin allow-popups" referrerPolicy="strict-origin-when-cross-origin" onLoad={() => setLoadedUrl(url)} onError={() => setFailedUrl(url)}/>}
+    {screenshot ? <img className="outcome-tile-screenshot" src={screenshot} alt={`First screen of ${post.name || 'shared work'}`}/> : url && failedUrl !== url && <iframe className={`outcome-tile-frame ${loadedUrl === url ? 'is-ready' : ''}`} src={url} title={`Home screen of ${post.name || 'shared work'}`} loading="lazy" tabIndex={-1} aria-hidden="true" sandbox="allow-forms allow-scripts allow-same-origin allow-popups" referrerPolicy="strict-origin-when-cross-origin" onLoad={() => setLoadedUrl(url)} onError={() => setFailedUrl(url)}/>}
     <span className="outcome-preview-host">{hostname(post.url)}</span>
     <button type="button" className="outcome-tile-preview-action" onClick={onOpen} aria-label={`View ${post.name || 'outcome'}`}><span aria-hidden="true">↗</span></button>
   </div>;

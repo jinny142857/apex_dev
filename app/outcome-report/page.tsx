@@ -52,7 +52,7 @@ export default function OutcomeReportPage() {
       let samplePrd: Partial<Prd> | undefined;
       try { samplePrd = JSON.parse(localStorage.getItem(`apex-demo-outcome-prd-${postId}`) || 'null') || undefined; }
       catch { /* Ignore an invalid demo PRD. */ }
-      setReport({ name: post.name || 'Final outcome', ownerName: post.ownerName || 'Participant', url: post.url, problem: post.problem, features: post.features, guide: post.guide, prd: samplePrd, selfAssessment: post.selfAssessment, selfAssessmentScale: post.selfAssessmentScale, demo: true });
+      setReport({ name: post.name || 'Final outcome', ownerName: post.ownerName || 'Participant', url: post.url, problem: post.problem, features: post.features, guide: post.guide, previewImage: post.previewImage, prd: samplePrd, selfAssessment: post.selfAssessment, selfAssessmentScale: post.selfAssessmentScale, demo: true });
       return;
     }
 
@@ -70,7 +70,7 @@ export default function OutcomeReportPage() {
         if (cancelled) return;
         setReport({
           name: post.name || 'Final outcome', ownerName: post.ownerName || user.displayName || 'Participant',
-          url: post.url, problem: post.problem, features: post.features, guide: post.guide,
+          url: post.url, problem: post.problem, features: post.features, guide: post.guide, previewImage: post.previewImage,
           selfAssessment: post.selfAssessment, selfAssessmentScale: post.selfAssessmentScale,
           prework: prework.data()?.text, prd: prd.data() as Partial<Prd> | undefined,
         });
