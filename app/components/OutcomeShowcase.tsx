@@ -40,7 +40,7 @@ export function PresentationMode({ items, initialIndex = 0, title, currentUser, 
   const [minimized, setMinimized] = useState(false);
   const [maximized, setMaximized] = useState(false);
   const [readyFrames, setReadyFrames] = useState<Record<string, boolean>>({});
-  const [showScreenshot, setShowScreenshot] = useState(false);
+  const [showScreenshot, setShowScreenshot] = useState(true);
   const [stalledFrame, setStalledFrame] = useState('');
   const shellRef = useRef<HTMLDivElement>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
@@ -66,7 +66,7 @@ export function PresentationMode({ items, initialIndex = 0, title, currentUser, 
   useEffect(() => {
     if (active) setIndex(Math.min(initialIndex, Math.max(items.length - 1, 0)));
   }, [active, initialIndex, items.length]);
-  useEffect(() => { setShowScreenshot(false); }, [index]);
+  useEffect(() => { setShowScreenshot(true); }, [index]);
   useEffect(() => {
     if (!active) return;
     const keydown = (event: KeyboardEvent) => {
