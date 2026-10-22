@@ -25,7 +25,7 @@ function safePreviewImage(value?: string) {
   return value && value.length <= 420_000 && /^data:image\/jpeg;base64,[A-Za-z0-9+/=]+$/.test(value) ? value : '';
 }
 
-export function PresentationMode({ items, initialIndex = 0, title, currentUser, displayName, isAdmin = false, onClose, scoring, representativePick, demo = false, solo = false, embedded = false, active = true, preloadAll = false }: { items: PresentationItem[]; initialIndex?: number; title: string; currentUser: User; displayName: string; isAdmin?: boolean; onClose: () => void; scoring?: ScoreControls; representativePick?: RepresentativePick; demo?: boolean; solo?: boolean; embedded?: boolean; active?: boolean; preloadAll?: boolean }) {
+export function PresentationMode({ items, initialIndex = 0, title, currentUser, displayName, isAdmin = false, onClose, scoring, representativePick, demo = false, solo = false, embedded = false, active = true }: { items: PresentationItem[]; initialIndex?: number; title: string; currentUser: User; displayName: string; isAdmin?: boolean; onClose: () => void; scoring?: ScoreControls; representativePick?: RepresentativePick; demo?: boolean; solo?: boolean; embedded?: boolean; active?: boolean }) {
   const { tr } = useLanguage();
   const [index, setIndex] = useState(Math.min(initialIndex, Math.max(items.length - 1, 0)));
   const [comments, setComments] = useState<{ id: string; text?: string; authorName?: string; authorId?: string }[]>([]);
@@ -39,17 +39,12 @@ export function PresentationMode({ items, initialIndex = 0, title, currentUser, 
   const [presentationView, setPresentationView] = useState(false);
   const [minimized, setMinimized] = useState(false);
   const [maximized, setMaximized] = useState(false);
-  const [readyFrames, setReadyFrames] = useState<Record<string, boolean>>({});
-  const [showScreenshot, setShowScreenshot] = useState(true);
-  const [stalledFrame, setStalledFrame] = useState('');
   const shellRef = useRef<HTMLDivElement>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
   const item = items[index];
   const post = item?.post;
   const url = safeUrl(post?.url);
   const screenshot = safePreviewImage(post?.previewImage);
-  const previewKey = `${post?.id || ''}:${url}`;
-  const frameReady = !!readyFrames[previewKey];
   const canRate = !!scoring && !scoring.submitted && !scoring.closed && !!item?.scoreId;
   const rated = canRate && scoring.rubric.every(criterion => scoring.values[item.scoreId!]?.[criterion.id] !== undefined && scoring.values[item.scoreId!]?.[criterion.id] !== '');
   const scoreTargets = items.filter(entry => entry.scoreId);
@@ -66,7 +61,6 @@ export function PresentationMode({ items, initialIndex = 0, title, currentUser, 
   useEffect(() => {
     if (active) setIndex(Math.min(initialIndex, Math.max(items.length - 1, 0)));
   }, [active, initialIndex, items.length]);
-  useEffect(() => { setShowScreenshot(true); }, [index]);
   useEffect(() => {
     if (!active) return;
     const keydown = (event: KeyboardEvent) => {
@@ -79,11 +73,6 @@ export function PresentationMode({ items, initialIndex = 0, title, currentUser, 
     window.addEventListener('keydown', keydown);
     return () => window.removeEventListener('keydown', keydown);
   }, [active, embedded, presentationView, items.length, onClose, ratingOpen]);
-  useEffect(() => {
-    if (!active || !url || frameReady) return;
-    const timeout = window.setTimeout(() => setStalledFrame(previewKey), 12000);
-    return () => window.clearTimeout(timeout);
-  }, [active, url, frameReady, previewKey]);
   useEffect(() => {
     if (!post) return;
     if (demo) { setComments(post.demoComments || []); return; }
@@ -135,12 +124,9 @@ export function PresentationMode({ items, initialIndex = 0, title, currentUser, 
               <button className="window-dot window-maximize" onClick={() => { if (document.fullscreenElement) { void document.exitFullscreen(); setMaximized(false); } else { void shellRef.current?.requestFullscreen?.().then(() => setMaximized(true)).catch(() => setMaximized(true)); } }} title={tr('Maximize window')} aria-label={tr('Maximize window')}>↗</button>
             </span>
             <span className="presentation-browser-title">{post.name || 'Live preview'}</span>
-            {screenshot && <button type="button" className="presentation-show-screenshot" onClick={() => setShowScreenshot(value => !value)} aria-pressed={showScreenshot}>{showScreenshot ? 'View live app' : 'View first screen'}</button>}{url && <a className="presentation-open-site" href={url} target="_blank" rel="noopener noreferrer">Open site ↗</a>}
+            {url && <a className="presentation-open-site" href={url} target="_blank" rel="noopener noreferrer">Open site ↗</a>}
           </div>
-          {showScreenshot && screenshot ? <div className="presentation-frame-stage presentation-screenshot-stage"><img src={screenshot} alt={`First screen of ${post.name || 'shared work'}`}/></div> : url ? <div className="presentation-frame-stage">
-            {(preloadAll ? items : [item]).map(entry => { const frameUrl = safeUrl(entry.post.url); const frameKey = `${entry.post.id}:${frameUrl}`; return frameUrl && <iframe key={frameKey} className={`${frameKey === previewKey ? 'is-active' : ''} ${!readyFrames[frameKey] ? 'is-loading' : ''}`} src={frameUrl} title={`Preview of ${entry.post.name || 'outcome'}`} loading="eager" sandbox={demo ? undefined : 'allow-forms allow-scripts allow-same-origin allow-popups'} referrerPolicy="strict-origin-when-cross-origin" allowFullScreen onLoad={() => setReadyFrames(previous => ({ ...previous, [frameKey]: true }))}/>; })}
-            {!frameReady && <div className="presentation-frame-pending" role="status"><span aria-hidden="true">✦</span><strong>{post.name || 'Live preview'}</strong><small>{stalledFrame === previewKey ? 'This site is not responding inside the preview.' : 'Opening site…'}</small></div>}
-          </div> : <div className="presentation-no-preview"><span aria-hidden="true">✳</span><h3>{post.name || 'Shared outcome'}</h3><p>{post.features || post.problem || 'This work has no website link.'}</p></div>}
+          {screenshot ? <div className="presentation-frame-stage presentation-screenshot-stage"><img src={screenshot} alt={`First screen of ${post.name || 'shared work'}`}/></div> : <div className="presentation-no-preview"><span aria-hidden="true">✳</span><h3>{post.name || 'Shared outcome'}</h3><p>{post.features || post.problem || 'This work has no first screen image yet.'}</p></div>}
         </div>{solo && <div className="presentation-solo-navigation"><button disabled={index === 0} onClick={() => setIndex(index - 1)} aria-label="Previous work">←</button><button disabled={index === items.length - 1} onClick={() => setIndex(index + 1)} aria-label="Next work">→</button></div>}<div className="presentation-caption"><div><span className="eyebrow">{item.label || 'INDIVIDUAL OUTCOME'}</span><h3>{post.name || 'Untitled outcome'}</h3><p>By {post.ownerName || 'Participant'}</p>{(post.problem || post.features || post.guide) && <details className="presentation-about"><summary>About this work</summary>{post.problem && <p><strong>Challenge:</strong> {post.problem}</p>}{post.features && <p><strong>What it does:</strong> {post.features}</p>}{post.guide && <p><strong>Notes:</strong> {post.guide}</p>}</details>}</div><div className="presentation-nav">{post.ownerId === currentUser.uid && <a className="secondary outcome-pdf-button" href={`/outcome-report?post=${encodeURIComponent(post.id)}${demo ? '&demo=1' : ''}`} target="_blank" rel="noopener noreferrer">{tr('View report')} ↗</a>}<button className={`like-button ${liked ? 'liked' : ''}`} onClick={() => void toggleLike()} aria-pressed={liked} aria-label={liked ? 'Unlike this work' : 'Like this work'}>{liked ? '♥' : '♡'} {likes.length}</button>{canRate && <button className="presentation-rate-button" onClick={() => setRatingOpen(true)}>{rated ? 'Edit review' : 'Evaluate'}</button>}<button className="secondary" disabled={index === 0} onClick={() => setIndex(index - 1)} aria-label="Previous work">←</button><button className="secondary" disabled={index === items.length - 1} onClick={() => setIndex(index + 1)} aria-label="Next work">→</button></div></div></section>
       {showSidebar && <aside className="presentation-sidebar" id="presentation-comments-panel">{representativePick && <section className="presentation-score presentation-representative"><div className="presentation-side-heading"><h3>Team representative</h3></div>{representativePick.ownRepresentativeId === post.id ? <p className="representative-confirmed">✓ This is your team's representative.</p> : <><p>Discuss as a team, then confirm the one work that should present for you.</p><button disabled={representativePick.busy} onClick={() => representativePick.onPick(post.id)}>Select as our representative</button></>}</section>}{scoring && <section className="presentation-score"><div className="presentation-side-heading"><h3>Your evaluation</h3></div><p>{scoring.submitted ? 'Scores submitted privately.' : scoring.closed ? 'Scoring has closed.' : `${scoreTargets.filter(entry => scoring.rubric.every(criterion => scoring.values[entry.scoreId!]?.[criterion.id] !== undefined && scoring.values[entry.scoreId!]?.[criterion.id] !== '')).length} / ${scoreTargets.length} other teams reviewed`}</p>{canRate && <button className="presentation-rate-button" onClick={() => setRatingOpen(true)}>{rated ? 'Edit review' : 'Evaluate'}</button>}{!scoring.submitted && !scoring.closed && <button disabled={!readyToSubmit || scoring.busy} onClick={scoring.onSubmit}>Submit all scores</button>}{scoring.error && <p role="status" className="presentation-error">{scoring.error}</p>}</section>}
         <section className="presentation-comments"><div className="presentation-side-heading"><h3>Comments</h3><span>{comments.length}</span></div><div className="presentation-comment-list">{comments.length ? comments.map(entry => <div className="presentation-comment" key={entry.id}><strong>{entry.authorName || 'Participant'}</strong><p>{entry.text}</p>{(entry.authorId === currentUser.uid || isAdmin) && <button className="inline-link" onClick={() => void editComment(entry.id, entry.text || '')}>Edit</button>}{(entry.authorId === currentUser.uid || post.ownerId === currentUser.uid || isAdmin) && <button className="inline-link" onClick={() => demo ? setComments(previous => previous.filter(item => item.id !== entry.id)) : void updateDoc(doc(clientDb(), 'projects', post.id, 'comments', entry.id), { isArchived: true, archivedAt: serverTimestamp(), archivedBy: currentUser.uid }).catch(() => setError('Could not remove the comment.'))}>Remove</button>}</div>) : <p className="muted">No comments yet. Start the conversation.</p>}</div><div className="presentation-comment-form"><label htmlFor="presentation-comment">Add a comment</label><textarea id="presentation-comment" placeholder="Share a thoughtful response…" value={comment} onChange={event => setComment(event.target.value)}/><button disabled={posting || !comment.trim()} onClick={() => void submitComment()}>Post comment</button>{error && <p role="status">{error}</p>}</div></section>
@@ -160,13 +146,10 @@ function LikeCount({ postId, demo, demoCount = 0 }: { postId: string; demo?: boo
 }
 
 function OutcomeThumbnail({ post, index, onOpen }: { post: OutcomePost; index: number; onOpen: () => void }) {
-  const url = safeUrl(post.url);
   const screenshot = safePreviewImage(post.previewImage);
-  const [loadedUrl, setLoadedUrl] = useState('');
-  const [failedUrl, setFailedUrl] = useState('');
   return <div className="outcome-tile-preview">
     <span className="outcome-tile-art" aria-hidden="true"><b>{String(index + 1).padStart(2, '0')}</b><i>{(post.name || 'W').slice(0, 1)}</i></span>
-    {screenshot ? <img className="outcome-tile-screenshot" src={screenshot} alt={`First screen of ${post.name || 'shared work'}`}/> : url && failedUrl !== url && <iframe className={`outcome-tile-frame ${loadedUrl === url ? 'is-ready' : ''}`} src={url} title={`Home screen of ${post.name || 'shared work'}`} loading="lazy" tabIndex={-1} aria-hidden="true" sandbox="allow-forms allow-scripts allow-same-origin allow-popups" referrerPolicy="strict-origin-when-cross-origin" onLoad={() => setLoadedUrl(url)} onError={() => setFailedUrl(url)}/>}
+    {screenshot && <img className="outcome-tile-screenshot" src={screenshot} alt={`First screen of ${post.name || 'shared work'}`}/>}
     <span className="outcome-preview-host">{hostname(post.url)}</span>
     <button type="button" className="outcome-tile-preview-action" onClick={onOpen} aria-label={`View ${post.name || 'outcome'}`}><span aria-hidden="true">↗</span></button>
   </div>;
